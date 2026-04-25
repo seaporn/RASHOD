@@ -1,62 +1,222 @@
-function update(shouldSave = true) {
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            margin: 0; padding: 15px; 
+            background: linear-gradient(rgba(26, 26, 27, 0.8), rgba(26, 26, 27, 0.9)), 
+                        url('https://i.ibb.co/bRDFHNp4/Banknote-5000-rubles-1997-front.jpg');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: #ffffff; min-height: 100vh;
+        }
+        .card { 
+            background: rgba(28, 28, 30, 0.75); padding: 20px; border-radius: 28px; 
+            border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px); box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
+        }
+        .greeting { font-size: 1.2em; font-weight: bold; color: #a29bfe; margin-bottom: 20px; text-align: center; }
+        .section { color: #55efc4; font-size: 0.75em; font-weight: bold; margin: 20px 0 12px; text-transform: uppercase; letter-spacing: 1.2px; }
+        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        input { 
+            width: 95px; background: #2d2d2e; border: 1px solid #444; 
+            color: white; border-radius: 8px; padding: 6px 10px; text-align: right; outline: none;
+        }
+        
+        .stats-btn {
+            width: 100%; background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            color: white; border: none; padding: 18px; border-radius: 20px;
+            font-weight: bold; font-size: 1em; margin-top: 25px;
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: 0.3s;
+        }
+        .stats-btn:active { transform: scale(0.98); }
+
+        /* МОДАЛЬНОЕ ОКНО */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000; backdrop-filter: blur(8px);
+        }
+        .modal-content {
+            position: absolute; bottom: 0; width: 100%;
+            background: #1c1c1e; border-radius: 30px 30px 0 0;
+            padding: 25px; box-sizing: border-box; color: white;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .stat-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-bottom: 15px; border-left: 4px solid #a29bfe; }
+        .stat-label { font-size: 0.7em; color: #aaa; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-value { font-size: 1.1em; font-weight: bold; }
+
+        .ai-advices { font-size: 0.9em; line-height: 1.6; color: #efefef; padding-left: 20px; }
+        .ai-advices li { margin-bottom: 12px; }
+
+        .footer { display: flex; justify-content: flex-end; margin-top: 20px; }
+        .settings-toggle { background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 40px; height: 40px; color: white; font-size: 1.1em; }
+        
+        .del-btn { display: none; color: #ff7675; margin-left: 10px; font-weight: bold; cursor: pointer; }
+        .add-btn { display: none; width: 100%; background: none; border: 1px dashed #55efc4; color: #55efc4; padding: 12px; border-radius: 16px; margin-bottom: 15px; font-weight: bold; }
+
+        /* ТЕГ ВЕРСИИ */
+        .version-tag { font-size: 0.65em; color: #444; text-align: center; margin-top: 15px; letter-spacing: 1px; }
+    </style>
+</head>
+<body onclick="document.activeElement.blur()">
+    <div class="card" onclick="event.stopPropagation()">
+        <div id="user-greeting" class="greeting">ФИНАНСОВЫЙ ПИЛОТ</div>
+
+        <div class="section">💰 ВАШИ СЧЕТА</div>
+        <div id="assets-list"></div>
+        <button id="add-btn" class="add-btn" onclick="addNewAsset()">+ Добавить счет</button>
+
+        <div class="section" style="color:#74b9ff;">📊 ПЛАН МЕСЯЦА</div>
+        <div class="row"><span>📈 ДОХОД</span><input type="number" id="inc" oninput="update()"></div>
+        <div class="row"><span>📉 ТРАТЫ</span><input type="number" id="exp" oninput="update()"></div>
+
+        <button class="stats-btn" onclick="showAnalytics()">
+            📊 СФОРМИРОВАТЬ АНАЛИТИКУ
+        </button>
+
+        <div class="footer">
+            <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
+        </div>
+        
+        <div class="version-tag">BUILD VER: 2.4.0-AI_PILOT</div>
+    </div>
+
+    <div id="ai-modal" class="modal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <span style="font-weight: bold; color: #a29bfe; font-size: 0.9em;">🤖 ОТЧЕТ AI-PILOT 2.4</span>
+                <span onclick="closeModal()" style="font-size: 1.5em; color: #666; cursor: pointer;">×</span>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Процент накоплений</div>
+                <div id="save-rate" class="stat-value">0%</div>
+            </div>
+
+            <div class="stat-card" style="border-left-color: #55efc4;">
+                <div class="stat-label">Запас прочности</div>
+                <div id="safety-margin" class="stat-value">0 месяцев</div>
+            </div>
+
+            <div class="section" style="margin-top:20px;">💡 СОВЕТЫ ИИ</div>
+            <ul id="ai-deep-advices" class="ai-advices"></ul>
+
+            <button class="stats-btn" onclick="closeModal()" style="margin-top: 15px; background: #333; box-shadow: none;">ЗАКРЫТЬ</button>
+            <div style="font-size:0.5em; color:#444; text-align:center; margin-top:10px;">DATA ANALYTICS ENGINE V.2.4</div>
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        let settingsMode = false;
+
+        function loadData() {
+            const savedAssets = JSON.parse(localStorage.getItem('myAssets')) || [{ name: 'Сбербанк', val: 15000 }];
+            const list = document.getElementById('assets-list');
+            list.innerHTML = '';
+            savedAssets.forEach(a => renderAsset(a.name, a.val));
+            document.getElementById('inc').value = localStorage.getItem('myInc') || 60000;
+            document.getElementById('exp').value = localStorage.getItem('myExp') || 30000;
+            update(false);
+        }
+
+        function renderAsset(name, val) {
+            const html = `<div class="asset-item" data-name="${name}">
+                <div class="row">
+                    <span style="color:#b2bec3; font-size:0.85em;">● ${name}</span>
+                    <div style="display:flex; align-items:center;">
+                        <input type="number" value="${val}" oninput="update()">
+                        <span class="del-btn" onclick="this.closest('.asset-item').remove(); update();">×</span>
+                    </div>
+                </div>
+            </div>`;
+            document.getElementById('assets-list').insertAdjacentHTML('beforeend', html);
+        }
+
+        function addNewAsset() {
+            const name = prompt("Название:");
+            if (name) { renderAsset(name, 0); update(); }
+        }
+
+        function toggleSettings() {
+            settingsMode = !settingsMode;
+            document.querySelectorAll('.del-btn').forEach(b => b.style.display = settingsMode ? 'block' : 'none');
+            document.getElementById('add-btn').style.display = settingsMode ? 'block' : 'none';
+        }
+
+        function update(shouldSave = true) {
             let totalNow = 0;
             const assets = [];
-            
             document.querySelectorAll('#assets-list .asset-item').forEach(item => {
                 const val = parseFloat(item.querySelector('input').value) || 0;
                 totalNow += val;
                 assets.push({ name: item.getAttribute('data-name'), val: val });
-                
-                // Индивидуальный ИИ под строкой
-                const hint = item.querySelector('.ai-small');
-                if (val > 100000) hint.innerText = "🤖 Мощный актив, так держать!";
-                else if (val > 0) hint.innerText = "🤖 Резерв в безопасности";
-                else hint.innerText = "🤖 Пора бы пополнить этот счет";
             });
 
             const inc = parseFloat(document.getElementById('inc').value) || 0;
             const exp = parseFloat(document.getElementById('exp').value) || 0;
-            const net = inc - exp;
-            const totalFuture = totalNow + net;
 
-            document.getElementById('r1').innerText = totalNow.toLocaleString() + " ₽";
-            document.getElementById('r2').innerText = totalFuture.toLocaleString() + " ₽";
-            
-            // Анализ плана
-            document.getElementById('ai-inc').innerText = `🤖 Это ${Math.round(inc/30).toLocaleString()} ₽ в день`;
-            document.getElementById('ai-exp').innerText = exp > inc * 0.8 ? "🚨 Опасно! Тратишь почти всё" : "🤖 Расходы под контролем";
-
-            // --- ГЛАВНЫЙ ВЫВОД ИИ (Логика из Obsidian) ---
-            let mainAdvice = "";
-            const survivalMonths = exp > 0 ? (totalNow / exp).toFixed(1) : 0;
-
-            if (net > 0) {
-                mainAdvice = `📈 Капитал растет! За месяц ты прибавишь **${net.toLocaleString()} ₽**. `;
-                if (survivalMonths >= 6) {
-                    mainAdvice += `Твоя подушка безопасности на высоте: ты проживешь **${survivalMonths} мес.** без работы. Время инвестировать!`;
-                } else if (survivalMonths >= 3) {
-                    mainAdvice += `У тебя есть база на **${survivalMonths} мес.** Это неплохо, но цель — полгода.`;
-                } else {
-                    mainAdvice += `Но запаса прочности почти нет (всего на **${survivalMonths} мес.**). Копи усерднее!`;
-                }
-            } else if (net < 0) {
-                mainAdvice = `🚨 **Критическая ситуация!** Ты прожигаешь по **${Math.abs(net).toLocaleString()} ₽** в месяц. Твоих денег хватит всего на **${survivalMonths} мес.** Срочно режь косты!`;
-            } else {
-                mainAdvice = "⚖️ Ты в нуле. Деньги приходят и уходят. Чтобы богатеть, нужно либо поднять доход, либо снизить траты.";
-            }
-
-            document.getElementById('ai-main-advice').innerHTML = mainAdvice;
-
-            // Приветствие и сохранение
             const name = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Друг";
-            document.getElementById('user-greeting').innerText = `Привет, ${name}!`;
+            document.getElementById('user-greeting').innerText = `Бюджет ${name}`;
 
             if (shouldSave) {
                 localStorage.setItem('myAssets', JSON.stringify(assets));
                 localStorage.setItem('myInc', inc);
                 localStorage.setItem('myExp', exp);
-                const indicator = document.getElementById('save-indicator');
-                indicator.style.opacity = "1";
-                setTimeout(() => { indicator.style.opacity = "0.4"; }, 1000);
             }
         }
+
+        function showAnalytics() {
+            document.activeElement.blur(); // Прячем клавиатуру
+            const totalNow = Array.from(document.querySelectorAll('#assets-list input')).reduce((s, i) => s + (parseFloat(i.value) || 0), 0);
+            const inc = parseFloat(document.getElementById('inc').value) || 0;
+            const exp = parseFloat(document.getElementById('exp').value) || 0;
+            const net = inc - exp;
+            
+            const saveRate = inc > 0 ? Math.round((net / inc) * 100) : 0;
+            const survival = exp > 0 ? (totalNow / exp).toFixed(1) : 0;
+
+            document.getElementById('save-rate').innerText = saveRate + "% от дохода";
+            document.getElementById('safety-margin').innerText = survival + " мес. автономности";
+
+            const adviceList = document.getElementById('ai-deep-advices');
+            adviceList.innerHTML = "";
+            
+            let advices = [];
+            if (net > 0) {
+                advices.push(`✅ Капитал растет: <b>+${net.toLocaleString()} ₽</b> в месяц.`);
+                if (saveRate < 20) advices.push("⚠️ Твой процент накоплений низкий. Попробуй откладывать хотя бы 20%.");
+                else advices.push("🚀 Мощная дисциплина! Ты строишь капитал быстрее большинства.");
+            } else {
+                advices.push("🚨 <b>Внимание:</b> Ты тратишь больше, чем зарабатываешь. Это путь в долги.");
+            }
+
+            if (survival < 3) advices.push("🔴 Опасная зона! Твоего запаса хватит всего на <b>" + survival + " мес.</b> Срочно начни копить.");
+            else if (survival >= 6) advices.push("💎 Ты в безопасности. Твоя подушка (>6 мес.) позволяет начать инвестировать.");
+
+            advices.forEach(txt => {
+                const li = document.createElement('li');
+                li.innerHTML = txt;
+                adviceList.appendChild(li);
+            });
+
+            document.getElementById('ai-modal').style.display = 'block';
+            tg.HapticFeedback.impactOccurred('heavy');
+        }
+
+        function closeModal() { document.getElementById('ai-modal').style.display = 'none'; }
+
+        loadData();
+    </script>
+</body>
+</html>
