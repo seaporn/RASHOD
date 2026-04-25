@@ -8,61 +8,95 @@
         body { 
             font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
             margin: 0; padding: 15px; 
-            background: linear-gradient(rgba(26, 26, 27, 0.85), rgba(26, 26, 27, 0.85)), 
-                        url('https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Russian_ruble_5000_front_banknote_2023.jpg/800px-Russian_ruble_5000_front_banknote_2023.jpg');
+            /* СТИЛЬНЫЙ ФОН: затемнение + купюра */
+            background: linear-gradient(rgba(26, 26, 27, 0.88), rgba(26, 26, 27, 0.95)), 
+                        url('https://i.ibb.co/3s6D50y/bg-5000.jpg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
             color: #e0e0e0; 
             min-height: 100vh;
+            overflow-x: hidden;
         }
         .card { 
-            background: rgba(36, 36, 37, 0.9); 
-            padding: 20px; border-radius: 24px; 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            backdrop-filter: blur(10px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
+            background: rgba(36, 36, 37, 0.85); 
+            padding: 20px; border-radius: 28px; 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            backdrop-filter: blur(15px); /* Усиленный блюр */
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6); 
+            margin-top: 10px;
         }
-        .greeting { font-size: 1.1em; font-weight: bold; color: #a29bfe; margin-bottom: 5px; }
-        .status-line { font-size: 0.8em; color: #bbb; margin-bottom: 20px; }
-        .section { color: #55efc4; font-size: 0.75em; font-weight: bold; margin: 15px 0 10px; letter-spacing: 1px; text-transform: uppercase; }
-        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .greeting { font-size: 1.2em; font-weight: bold; color: #a29bfe; margin-bottom: 5px; }
+        .status-line { font-size: 0.85em; color: #bbb; margin-bottom: 25px; display: flex; align-items: center; gap: 6px; }
+        .section { color: #55efc4; font-size: 0.75em; font-weight: bold; margin: 18px 0 12px; letter-spacing: 1.2px; text-transform: uppercase; }
+        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .label { font-size: 0.95em; color: #eee; display: flex; align-items: center; gap: 10px; }
         input { 
-            width: 90px; background: rgba(45, 45, 46, 0.8); border: 1px solid #444; 
-            color: white; border-radius: 8px; padding: 8px; text-align: right; outline: none; 
+            width: 95px; background: rgba(45, 45, 46, 0.7); border: 1px solid rgba(255,255,255,0.1); 
+            color: white; border-radius: 10px; padding: 10px; text-align: right; outline: none; font-size: 1em;
+            transition: all 0.2s;
         }
+        input:focus { border-color: #a29bfe; background: rgba(45, 45, 46, 0.9); }
         .ai-box { 
-            background: rgba(162, 155, 254, 0.1); border-left: 4px solid #a29bfe; 
-            padding: 12px; border-radius: 8px; margin: 20px 0; font-size: 0.85em; 
+            background: rgba(162, 155, 254, 0.12); border-left: 4px solid #a29bfe; 
+            padding: 15px; border-radius: 12px; margin: 20px 0; font-size: 0.9em; line-height: 1.5; 
         }
-        .res-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95em; }
+        .res-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1em; padding: 0 5px; }
+        b.val { font-size: 1.1em; }
         button { 
             width: 100%; background: #a29bfe; color: #1a1a1b; border: none; 
-            padding: 16px; border-radius: 14px; font-weight: bold; margin-top: 10px; 
+            padding: 18px; border-radius: 16px; font-weight: bold; margin-top: 15px; 
+            font-size: 1em; cursor: pointer; transition: background 0.2s;
         }
+        button:active { background: #8e85e0; }
     </style>
 </head>
 <body>
     <div class="card">
         <div id="user-greeting" class="greeting">Привет!</div>
-        <div id="ai-status" class="status-line">Загружаю данные...</div>
+        <div id="ai-status" class="status-line">🔍 Загружаю твой баланс...</div>
         
-        <div class="section">💰 МОИ АКТИВЫ</div>
-        <div class="row"><span>💵 Наличные</span><input type="number" id="cash" value="5000"></div>
-        <div class="row"><span>💳 Сбербанк</span><input type="number" id="sber" value="15000"></div>
-        <div class="row"><span>🟡 Тинькофф</span><input type="number" id="tink" value="5000"></div>
-        <div class="row"><span>🔵 ВТБ</span><input type="number" id="vtb" value="0"></div>
-
-        <div class="section">📊 ПЛАН</div>
-        <div class="row"><span>📈 Доход</span><input type="number" id="inc" value="50000"></div>
-        <div class="row"><span>📉 Траты</span><input type="number" id="exp" value="20000"></div>
-
-        <div class="ai-box">
-            <span id="advice">Анализирую твой бюджет...</span>
+        <div class="section">🏙️ МОИ АКТИВЫ</div>
+        <div class="row">
+            <div class="label">💵 Наличные</div>
+            <input type="number" id="cash" value="5000" inputmode="decimal">
+        </div>
+        <div class="row">
+            <div class="label">💳 Сбербанк</div>
+            <input type="number" id="sber" value="15000" inputmode="decimal">
+        </div>
+        <div class="row">
+            <div class="label">🟡 Тинькофф</div>
+            <input type="number" id="tink" value="10000" inputmode="decimal">
+        </div>
+        <div class="row">
+            <div class="label">🔵 ВТБ</div>
+            <input type="number" id="vtb" value="0" inputmode="decimal">
         </div>
 
-        <div class="res-row"><span>Всего сейчас:</span><b id="total" style="color:#55efc4">0 ₽</b></div>
-        <div class="res-row"><span>Прогноз:</span><b id="proj" style="color:#74b9ff">0 ₽</b></div>
+        <div class="section">📊 ПЛАН НА МЕСЯЦ</div>
+        <div class="row">
+            <div class="label" style="color: #74b9ff;">📈 Ожидаемый Доход</div>
+            <input type="number" id="inc" value="60000" inputmode="decimal">
+        </div>
+        <div class="row">
+            <div class="label" style="color: #ff7675;">📉 Планируемые Траты</div>
+            <input type="number" id="exp" value="30000" inputmode="decimal">
+        </div>
+
+        <div class="ai-box">
+            <span id="advice">Анализирую данные...</span>
+        </div>
+
+        <div class="res-row">
+            <span>Все деньги сейчас:</span>
+            <b id="total" class="val" style="color:#55efc4">0 ₽</b>
+        </div>
+        <div class="res-row">
+            <span>Прогноз на месяц:</span>
+            <b id="proj" class="val" style="color:#74b9ff">0 ₽</b>
+        </div>
 
         <button onclick="save()">💾 ЗАФИКСИРОВАТЬ</button>
     </div>
@@ -70,17 +104,27 @@
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
+        // Включаем виброотклик для iOS
+        tg.enableClosingConfirmation();
 
         function update() {
             const v = (id) => parseFloat(document.getElementById(id).value) || 0;
-            const total = v('cash') + v('sber') + v('tink') + v('vtb');
-            const net = v('inc') - v('exp');
+            
+            const cash = v('cash');
+            const sber = v('sber');
+            const tink = v('tink');
+            const vtb = v('vtb');
+            const income = v('inc');
+            const expenses = v('exp');
+
+            const total = cash + sber + tink + vtb;
+            const net = income - expenses;
             const proj = total + net;
 
-            document.getElementById('total').innerText = total.toLocaleString() + " ₽";
-            document.getElementById('proj').innerText = proj.toLocaleString() + " ₽";
+            document.getElementById('total').innerText = total.toLocaleString('ru-RU') + " ₽";
+            document.getElementById('proj').innerText = proj.toLocaleString('ru-RU') + " ₽";
 
-            // Логика приветствия
+            // Логика приветствия и ИИ-анализа (пересчитывается при каждом вводе)
             const hour = new Date().getHours();
             let welcome = "Доброй ночи";
             if (hour >= 5 && hour < 12) welcome = "Доброе утро";
@@ -90,24 +134,46 @@
             const name = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Друг";
             document.getElementById('user-greeting').innerText = `${welcome}, ${name}!`;
 
-            // Статус в зависимости от бюджета
-            let status = "";
-            if (total > 100000) status = "💰 Ты сегодня при деньгах!";
-            else if (total > 10000) status = "👍 Стабильное положение.";
-            else status = "⬇️ Нужно поднажать в этом месяце.";
+            let status = "🔍 Считаю...";
+            if (total === 0 && expenses === 0) {
+                status = "⏱️ Введи данные для старта";
+            } else if (total > 150000) {
+                status = "💰 Похоже, ты солидный человек!";
+            } else if (total > 30000) {
+                status = "👍 Финансы под контролем.";
+            } else {
+                status = "📉 Пора пополнять запасы.";
+            }
             document.getElementById('ai-status').innerText = status;
 
-            // Совет ИИ
-            let adv = net > 0 ? `Прогноз отличный: +${net.toLocaleString()} ₽.` : `Осторожно, минус ${Math.abs(net).toLocaleString()} ₽!`;
+            let adv = "";
+            if (income === 0 || expenses === 0) {
+                adv = "Введи план доходов и расходов, чтобы я смог дать прогноз.";
+            } else if (net > 0) {
+                adv = `Прогноз отличный! За месяц ты прибавишь <b>+${net.toLocaleString('ru-RU')} ₽</b>. Главное — придерживаться плана.`;
+            } else if (net < 0) {
+                adv = `🚨 Осторожно! Ты тратишь на <b>${Math.abs(net).toLocaleString('ru-RU')} ₽</b> больше, чем получаешь. Копилка пустеет!`;
+            } else {
+                adv = "Ты выходишь точно в ноль. Кошелек не пустеет, но и не растет.";
+            }
             document.getElementById('advice').innerHTML = `🤖 <b>ИИ:</b> ${adv}`;
         }
 
+        // Подключаем слушатели
         document.querySelectorAll('input').forEach(i => i.oninput = update);
+        
+        // Первый запуск
         update();
 
         function save() {
+            // Виброотклик
             tg.HapticFeedback.notificationOccurred('success');
-            tg.showPopup({ title: "Готово", message: "Бюджет обновлен!", buttons: [{type: "ok"}] });
+            // Всплывающее окно
+            tg.showPopup({ 
+                title: "Успех!", 
+                message: "Данные успешно зафиксированы.", 
+                buttons: [{type: "ok"}] 
+            });
         }
     </script>
 </body>
