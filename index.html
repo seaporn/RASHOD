@@ -8,20 +8,24 @@
         body { 
             font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
             margin: 0; padding: 15px; 
-            background: linear-gradient(rgba(26, 26, 27, 0.9), rgba(26, 26, 27, 0.9)), 
+            /* МЕНЯЕМ ЗДЕСЬ: сделали градиент светлее (0.7 вместо 0.9) */
+            background: linear-gradient(rgba(26, 26, 27, 0.75), rgba(26, 26, 27, 0.85)), 
                         url('https://i.ibb.co/bRDFHNp4/Banknote-5000-rubles-1997-front.jpg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            color: #e0e0e0; 
+            background-repeat: no-repeat;
+            color: #ffffff; 
             min-height: 100vh;
         }
+        
+        /* НЕМНОГО ПОДПРАВИМ КАРТОЧКУ, ЧТОБЫ ОНА БЫЛА КОНТРАСТНЕЕ */
         .card { 
-            background: rgba(36, 36, 37, 0.8); 
+            background: rgba(28, 28, 30, 0.7); /* Сделали чуть прозрачнее саму карточку */
             padding: 20px; border-radius: 28px; 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
         }
         .greeting { font-size: 1.2em; font-weight: bold; color: #a29bfe; }
