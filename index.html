@@ -7,6 +7,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 
     <style>
         body {
@@ -71,6 +73,7 @@
             text-align: right;
             outline: none;
             font-family: inherit;
+            box-sizing: border-box;
         }
 
         input:focus {
@@ -247,6 +250,68 @@
             margin-bottom: 12px;
         }
 
+        .ai-conclusion-card {
+            background: linear-gradient(135deg, rgba(162,155,254,0.18), rgba(85,239,196,0.08));
+            border: 1px solid rgba(162,155,254,0.35);
+            border-radius: 20px;
+            padding: 18px;
+            margin: 15px 0 18px;
+            line-height: 1.55;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        }
+
+        .ai-conclusion-title {
+            color: #a29bfe;
+            font-size: 0.72em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .ai-conclusion-text {
+            font-size: 1em;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .ai-big-points {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 12px;
+        }
+
+        .ai-point-card {
+            background: rgba(255,255,255,0.055);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px;
+            padding: 16px;
+            line-height: 1.5;
+        }
+
+        .ai-point-title {
+            font-size: 0.95em;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 7px;
+        }
+
+        .ai-point-text {
+            font-size: 0.86em;
+            color: #d8d8d8;
+        }
+
+        .ai-point-action {
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: rgba(85,239,196,0.08);
+            border-left: 3px solid #55efc4;
+            border-radius: 10px;
+            color: #f1f1f1;
+            font-size: 0.82em;
+        }
+
         .footer {
             display: flex;
             justify-content: flex-end;
@@ -285,10 +350,45 @@
             color: #55efc4;
             padding: 12px;
             border-radius: 16px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             font-weight: bold;
             font-family: inherit;
             cursor: pointer;
+        }
+
+        .add-asset-form {
+            display: none;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .add-asset-form input {
+            width: 100%;
+            text-align: left;
+            margin-bottom: 10px;
+        }
+
+        .confirm-add-btn {
+            width: 100%;
+            background: #55efc4;
+            color: #1a1a1b;
+            border: none;
+            padding: 12px;
+            border-radius: 14px;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .sync-status {
+            font-size: 0.62em;
+            color: rgba(255,255,255,0.35);
+            text-align: center;
+            margin-top: 12px;
+            line-height: 1.35;
         }
 
         .version-tag {
@@ -310,7 +410,17 @@
         <div class="section">💰 ВАШИ АКТИВЫ И СЧЕТА (₽)</div>
         <div id="assets-list"></div>
 
-        <button id="add-btn" class="add-btn" onclick="addNewAsset()">+ Добавить новый счет</button>
+        <button id="add-btn" class="add-btn" onclick="showAddAssetForm()">+ Добавить новый счет</button>
+
+        <div id="add-asset-form" class="add-asset-form">
+            <input
+                type="text"
+                id="new-asset-name"
+                placeholder="Название счета"
+                onkeydown="handleNewAssetKey(event)"
+            >
+            <button class="confirm-add-btn" onclick="confirmAddAsset()">Добавить счет</button>
+        </div>
 
         <div class="section" style="color:#74b9ff;">📊 ПЛАН ДОХОДОВ И ТРАТ (₽)</div>
 
@@ -355,6 +465,8 @@
             <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
         </div>
 
+        <div id="sync-status" class="sync-status">Синхронизация: проверка...</div>
+
         <div class="version-tag">ВЕРСИЯ ДЛЯ ЛЮБИМОЙ НАСТЮШИ VER: 2.1</div>
     </div>
 
@@ -380,8 +492,14 @@
                 <div id="future-result" class="stat-value">0 ₽</div>
             </div>
 
-            <div class="section" style="margin-top:20px;">💡 ПЕРСОНАЛЬНЫЕ СОВЕТЫ ИИ</div>
-            <ul id="ai-deep-advices" class="ai-advices"></ul>
+            <div class="section" style="margin-top:20px;">🧠 АНАЛИТИКА ПРОСТЫМИ СЛОВАМИ</div>
+
+            <div id="ai-conclusion" class="ai-conclusion-card">
+                <div class="ai-conclusion-title">Главный вывод</div>
+                <div class="ai-conclusion-text">Заполни данные — и я соберу понятный финансовый вывод.</div>
+            </div>
+
+            <div id="ai-big-points" class="ai-big-points"></div>
 
             <button class="stats-btn" onclick="closeModal()" style="margin-top: 15px; background: #333; box-shadow: none;">
                 ЗАКРЫТЬ ОТЧЕТ
@@ -397,17 +515,155 @@
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 
         if (tg) {
-            tg.ready && tg.ready();
-            tg.expand && tg.expand();
+            if (typeof tg.ready === 'function') tg.ready();
+            if (typeof tg.expand === 'function') tg.expand();
         }
 
+        const STORAGE_KEY = 'nastya_budget_v21';
+        const LEGACY_ASSETS_KEY = 'myAssets';
+        const LEGACY_INC_KEY = 'myInc';
+        const LEGACY_EXP_KEY = 'myExp';
+
         let settingsMode = false;
+        let saveTimer = null;
+        let lastSavedJson = '';
 
         const DEFAULT_ASSETS = [
             { name: 'Сбербанк', val: 0 },
             { name: 'Тинькофф', val: 0 },
             { name: 'ВТБ', val: 0 }
         ];
+
+        function hasCloudStorage() {
+            return tg && tg.CloudStorage &&
+                typeof tg.CloudStorage.getItem === 'function' &&
+                typeof tg.CloudStorage.setItem === 'function';
+        }
+
+        function setSyncStatus(text) {
+            const el = document.getElementById('sync-status');
+            if (el) el.innerText = text;
+        }
+
+        function cloudGetItem(key) {
+            return new Promise((resolve) => {
+                if (!hasCloudStorage()) {
+                    resolve(localStorage.getItem(key));
+                    return;
+                }
+
+                try {
+                    tg.CloudStorage.getItem(key, (error, value) => {
+                        if (error) {
+                            console.warn('CloudStorage getItem error:', error);
+                            resolve(localStorage.getItem(key));
+                            return;
+                        }
+
+                        resolve(value || localStorage.getItem(key));
+                    });
+                } catch (e) {
+                    console.warn('CloudStorage getItem failed:', e);
+                    resolve(localStorage.getItem(key));
+                }
+            });
+        }
+
+        function cloudSetItem(key, value) {
+            localStorage.setItem(key, value);
+
+            if (!hasCloudStorage()) {
+                setSyncStatus('Синхронизация: локальное сохранение в предпросмотре');
+                return;
+            }
+
+            try {
+                tg.CloudStorage.setItem(key, value, (error) => {
+                    if (error) {
+                        console.warn('CloudStorage setItem error:', error);
+                        setSyncStatus('Синхронизация: локально, облако временно недоступно');
+                        return;
+                    }
+
+                    setSyncStatus('Синхронизация: Telegram CloudStorage');
+                });
+            } catch (e) {
+                console.warn('CloudStorage setItem failed:', e);
+                setSyncStatus('Синхронизация: локально, облако временно недоступно');
+            }
+        }
+
+        function getLegacyData() {
+            let assets = null;
+
+            try {
+                assets = JSON.parse(localStorage.getItem(LEGACY_ASSETS_KEY));
+            } catch (e) {
+                assets = null;
+            }
+
+            if (!Array.isArray(assets) || assets.length === 0) {
+                assets = DEFAULT_ASSETS;
+            }
+
+            return {
+                assets,
+                income: parseFloat(localStorage.getItem(LEGACY_INC_KEY)) || 0,
+                expenses: parseFloat(localStorage.getItem(LEGACY_EXP_KEY)) || 0,
+                updatedAt: new Date().toISOString()
+            };
+        }
+
+        function normalizeData(data) {
+            if (!data || typeof data !== 'object') return getLegacyData();
+
+            const assets = Array.isArray(data.assets) && data.assets.length > 0
+                ? data.assets.map(a => ({
+                    name: String(a.name || 'Счет'),
+                    val: parseFloat(a.val) || 0
+                }))
+                : DEFAULT_ASSETS;
+
+            return {
+                assets,
+                income: parseFloat(data.income) || 0,
+                expenses: parseFloat(data.expenses) || 0,
+                updatedAt: data.updatedAt || new Date().toISOString()
+            };
+        }
+
+        function collectBudgetData() {
+            const assets = [];
+
+            document.querySelectorAll('#assets-list .asset-item').forEach(item => {
+                const input = item.querySelector('.asset-input');
+                const val = parseFloat(input.value) || 0;
+                const name = item.dataset.name || 'Счет';
+
+                assets.push({ name, val });
+            });
+
+            return {
+                assets,
+                income: getNumber('inc'),
+                expenses: getNumber('exp'),
+                updatedAt: new Date().toISOString()
+            };
+        }
+
+        function scheduleSave() {
+            clearTimeout(saveTimer);
+
+            saveTimer = setTimeout(() => {
+                const data = collectBudgetData();
+                const json = JSON.stringify(data);
+
+                if (json === lastSavedJson) return;
+
+                lastSavedJson = json;
+                cloudSetItem(STORAGE_KEY, json);
+            }, 250);
+        }
 
         function blurActive() {
             const active = document.activeElement;
@@ -429,28 +685,43 @@
             return parseFloat(document.getElementById(id).value) || 0;
         }
 
-        function loadData() {
-            let savedAssets;
+        async function loadData() {
+            setSyncStatus(hasCloudStorage()
+                ? 'Синхронизация: загрузка из Telegram CloudStorage...'
+                : 'Синхронизация: локальный режим предпросмотра'
+            );
+
+            let savedData = null;
 
             try {
-                savedAssets = JSON.parse(localStorage.getItem('myAssets'));
+                const raw = await cloudGetItem(STORAGE_KEY);
+                savedData = raw ? JSON.parse(raw) : null;
             } catch (e) {
-                savedAssets = null;
+                savedData = null;
             }
 
-            if (!Array.isArray(savedAssets) || savedAssets.length === 0) {
-                savedAssets = DEFAULT_ASSETS;
-            }
+            const data = normalizeData(savedData);
 
             const list = document.getElementById('assets-list');
             list.innerHTML = '';
 
-            savedAssets.forEach(a => renderAsset(a.name, a.val));
+            data.assets.forEach(a => renderAsset(a.name, a.val));
 
-            document.getElementById('inc').value = localStorage.getItem('myInc') || 0;
-            document.getElementById('exp').value = localStorage.getItem('myExp') || 0;
+            document.getElementById('inc').value = data.income || 0;
+            document.getElementById('exp').value = data.expenses || 0;
+
+            lastSavedJson = JSON.stringify(collectBudgetData());
 
             update(false);
+
+            if (!savedData) {
+                cloudSetItem(STORAGE_KEY, lastSavedJson);
+            }
+
+            setSyncStatus(hasCloudStorage()
+                ? 'Синхронизация: Telegram CloudStorage'
+                : 'Синхронизация: локальное сохранение в предпросмотре'
+            );
         }
 
         function renderAsset(name, val) {
@@ -472,6 +743,10 @@
             item.querySelector('.asset-name').textContent = `● ${name}`;
             item.querySelector('.asset-input').value = val || 0;
 
+            if (settingsMode) {
+                item.querySelector('.del-btn').style.display = 'flex';
+            }
+
             document.getElementById('assets-list').appendChild(item);
         }
 
@@ -480,13 +755,35 @@
             update();
         }
 
-        function addNewAsset() {
-            const name = prompt("Название аккаунта/карты:");
+        function showAddAssetForm() {
+            const form = document.getElementById('add-asset-form');
+            const input = document.getElementById('new-asset-name');
 
-            if (name && name.trim()) {
-                renderAsset(name.trim(), 0);
-                update();
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+
+            if (form.style.display === 'block') {
+                setTimeout(() => input.focus(), 100);
             }
+        }
+
+        function handleNewAssetKey(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                confirmAddAsset();
+            }
+        }
+
+        function confirmAddAsset() {
+            const input = document.getElementById('new-asset-name');
+            const name = input.value.trim();
+
+            if (!name) return;
+
+            renderAsset(name, 0);
+            input.value = '';
+            document.getElementById('add-asset-form').style.display = 'none';
+
+            update();
         }
 
         function toggleSettings() {
@@ -497,52 +794,57 @@
             });
 
             document.getElementById('add-btn').style.display = settingsMode ? 'block' : 'none';
+
+            const form = document.getElementById('add-asset-form');
+            if (form && !settingsMode) {
+                form.style.display = 'none';
+            }
         }
 
         function getAssetHint(name, val, income, expenses, totalNow) {
             const lower = name.toLowerCase();
 
             if (val < 0) {
-                return "🤖 Тут минус. Лучше проверить долг, кредитку или ошибку в сумме.";
+                return '🤖 Тут минус. Лучше проверить долг, кредитку или ошибку в сумме.';
             }
 
             if (val === 0) {
-                if (lower.includes('тинь') || lower.includes('tink')) return "🤖 Карта пока не используется. Нормально, если она запасная.";
-                if (lower.includes('втб')) return "🤖 Счет пуст. Можно использовать как отдельный резерв.";
-                return "🤖 Пока пусто. Если счет активный, лучше держать там хотя бы небольшой запас.";
+                if (lower.includes('тинь') || lower.includes('tink')) return '🤖 Карта пока не используется. Нормально, если она запасная.';
+                if (lower.includes('втб')) return '🤖 Счет пуст. Можно использовать как отдельный резерв.';
+                return '🤖 Пока пусто. Если счет активный, лучше держать там хотя бы небольшой запас.';
             }
 
             if (lower.includes('сбер')) {
-                if (val >= 10000) return "🤖 Хороший остаток на основном счету.";
-                return "🤖 На основном счету маловато. Лучше держать запас хотя бы на несколько дней.";
+                if (val >= 10000) return '🤖 Хороший остаток на основном счету.';
+                return '🤖 На основном счету маловато. Лучше держать запас хотя бы на несколько дней.';
             }
 
             if (lower.includes('тинь') || lower.includes('tink')) {
-                if (val > 0 && expenses > 0) return "🤖 Можно использовать для повседневных трат и контроля кэшбека.";
-                return "🤖 Деньги есть. Карта может быть удобной для мелких расходов.";
+                if (val > 0 && expenses > 0) return '🤖 Можно использовать для повседневных трат и контроля кэшбека.';
+                return '🤖 Деньги есть. Карта может быть удобной для мелких расходов.';
             }
 
             if (lower.includes('втб')) {
-                if (val > 0) return "🤖 Резерв на месте. Хорошо, когда часть денег лежит отдельно.";
-                return "🤖 Счет пуст. Можно сделать его резервным.";
+                if (val > 0) return '🤖 Резерв на месте. Хорошо, когда часть денег лежит отдельно.';
+                return '🤖 Счет пуст. Можно сделать его резервным.';
             }
 
             if (expenses > 0) {
-                if (val >= expenses) return "🤖 Этот счет один покрывает примерно месяц трат.";
-                if (val >= expenses / 2) return "🤖 Нормальный запас, но не весь месяц.";
-                if (val < expenses / 4) return "🤖 Небольшой остаток. Его хватит ненадолго при текущих тратах.";
+                if (val >= expenses) return '🤖 Этот счет один покрывает примерно месяц трат.';
+                if (val >= expenses / 2) return '🤖 Нормальный запас, но не весь месяц.';
+                if (val < expenses / 4) return '🤖 Небольшой остаток. Его хватит ненадолго при текущих тратах.';
             }
 
             if (totalNow > 0 && val >= totalNow * 0.6) {
-                return "🤖 Основная часть денег лежит здесь. Это удобно, но лучше не держать всё в одном месте.";
+                return '🤖 Основная часть денег лежит здесь. Это удобно, но лучше не держать всё в одном месте.';
             }
 
-            return "🤖 Рабочий остаток. Счет выглядит нормально.";
+            return '🤖 Рабочий остаток. Счет выглядит нормально.';
         }
 
         function getMainAdvice(totalNow, income, expenses, net, totalFuture, loadPercent, survival) {
             if (income <= 0 && expenses <= 0 && totalNow <= 0) {
-                return "Внеси суммы по счетам, доход и траты — после этого я покажу реальную картину бюджета.";
+                return 'Внеси суммы по счетам, доход и траты — после этого я покажу реальную картину бюджета.';
             }
 
             if (income <= 0 && expenses > 0) {
@@ -553,17 +855,17 @@
                 let text = `Твой капитал растет. За месяц ты станешь богаче примерно на <b>${money(net)}</b>. `;
 
                 if (loadPercent <= 50) {
-                    text += "Траты выглядят спокойно: остается хороший запас после дохода.";
+                    text += 'Траты выглядят спокойно: остается хороший запас после дохода.';
                 } else if (loadPercent <= 80) {
-                    text += "Ситуация нормальная, но траты уже занимают заметную часть дохода.";
+                    text += 'Ситуация нормальная, но траты уже занимают заметную часть дохода.';
                 } else {
-                    text += "Плюс есть, но он хрупкий: большая часть дохода уходит на расходы.";
+                    text += 'Плюс есть, но он хрупкий: большая часть дохода уходит на расходы.';
                 }
 
                 if (survival >= 6) {
-                    text += " Подушка уже сильная.";
+                    text += ' Подушка уже сильная.';
                 } else if (survival > 0 && survival < 3) {
-                    text += " Главная цель сейчас — докачать подушку безопасности.";
+                    text += ' Главная цель сейчас — докачать подушку безопасности.';
                 }
 
                 return text;
@@ -604,14 +906,14 @@
             document.getElementById('inc-hint').innerText =
                 income > 0
                     ? `🤖 Это примерно ${money(income / 30)} в день. После трат останется ${money(net)}.`
-                    : "🤖 Укажи доход, и я посчитаю запас на месяц.";
+                    : '🤖 Укажи доход, и я посчитаю запас на месяц.';
 
             document.getElementById('exp-hint').innerText =
                 expenses > 0 && income > 0
-                    ? `🤖 Нагрузка: ${loadPercent}%. ${expenses > income * 0.8 ? "Опасно близко к потолку." : "Пока контролируемо."}`
+                    ? `🤖 Нагрузка: ${loadPercent}%. ${expenses > income * 0.8 ? 'Опасно близко к потолку.' : 'Пока контролируемо.'}`
                     : expenses > 0
                         ? `🤖 План трат: ${money(expenses)}. Доход пока не указан.`
-                        : "🤖 Укажи траты, и я покажу нагрузку.";
+                        : '🤖 Укажи траты, и я покажу нагрузку.';
 
             document.querySelectorAll('#assets-list .asset-item').forEach(item => {
                 const name = item.dataset.name || 'Счет';
@@ -625,31 +927,60 @@
             const bar = document.getElementById('progress-bar');
             const visualPercent = Math.min(Math.max(rawLoadPercent, 0), 100);
 
-            bar.style.width = visualPercent + "%";
+            bar.style.width = visualPercent + '%';
 
             if (rawLoadPercent > 80) {
-                bar.style.background = "#ff7675";
-                bar.style.boxShadow = "0 0 10px rgba(255, 118, 117, 0.5)";
+                bar.style.background = '#ff7675';
+                bar.style.boxShadow = '0 0 10px rgba(255, 118, 117, 0.5)';
             } else if (rawLoadPercent > 50) {
-                bar.style.background = "#fdcb6e";
-                bar.style.boxShadow = "0 0 10px rgba(253, 203, 110, 0.5)";
+                bar.style.background = '#fdcb6e';
+                bar.style.boxShadow = '0 0 10px rgba(253, 203, 110, 0.5)';
             } else {
-                bar.style.background = "#55efc4";
-                bar.style.boxShadow = "0 0 10px rgba(85, 239, 196, 0.5)";
+                bar.style.background = '#55efc4';
+                bar.style.boxShadow = '0 0 10px rgba(85, 239, 196, 0.5)';
             }
 
             const userName = tg && tg.initDataUnsafe && tg.initDataUnsafe.user
                 ? tg.initDataUnsafe.user.first_name
-                : "";
+                : '';
 
             document.getElementById('user-greeting').innerText =
-                userName ? `${userName}, ваш бюджет` : "Мой бюджет";
+                userName ? `${userName}, ваш бюджет` : 'Мой бюджет';
 
             if (shouldSave) {
-                localStorage.setItem('myAssets', JSON.stringify(assets));
-                localStorage.setItem('myInc', income);
-                localStorage.setItem('myExp', expenses);
+                scheduleSave();
             }
+        }
+
+        function getBudgetMood(saveRate, loadPercent, survival, net, income, expenses) {
+            if (income <= 0 && expenses <= 0) return 'empty';
+            if (net < 0 || loadPercent > 100) return 'danger';
+            if (survival < 1 && expenses > 0) return 'danger';
+            if (loadPercent > 80 || saveRate < 10 || survival < 3) return 'warning';
+            if (saveRate >= 20 && survival >= 3 && loadPercent <= 80) return 'good';
+            if (saveRate >= 30 && survival >= 6 && loadPercent <= 60) return 'strong';
+            return 'normal';
+        }
+
+        function addAnalyticsPoint(title, text, action) {
+            const box = document.getElementById('ai-big-points');
+            const card = document.createElement('div');
+            card.className = 'ai-point-card';
+
+            card.innerHTML = `
+                <div class="ai-point-title">${title}</div>
+                <div class="ai-point-text">${text}</div>
+                <div class="ai-point-action"><b>Что сделать:</b> ${action}</div>
+            `;
+
+            box.appendChild(card);
+        }
+
+        function setAnalyticsConclusion(text) {
+            document.getElementById('ai-conclusion').innerHTML = `
+                <div class="ai-conclusion-title">Главный вывод</div>
+                <div class="ai-conclusion-text">${text}</div>
+            `;
         }
 
         function showAnalytics() {
@@ -666,6 +997,7 @@
             const saveRate = income > 0 ? Math.round((net / income) * 100) : 0;
             const loadPercent = income > 0 ? Math.round((expenses / income) * 100) : 0;
             const survival = expenses > 0 ? totalNow / expenses : 0;
+            const mood = getBudgetMood(saveRate, loadPercent, survival, net, income, expenses);
 
             document.getElementById('save-rate').innerText =
                 `${Math.max(saveRate, 0)}% от дохода`;
@@ -673,90 +1005,138 @@
             document.getElementById('safety-margin').innerText =
                 expenses > 0
                     ? `${survival.toFixed(1)} ${monthWord(survival)} автономности`
-                    : "Нельзя посчитать без плана трат";
+                    : 'Нельзя посчитать без плана трат';
 
             document.getElementById('future-result').innerText =
                 `${money(totalFuture)} после доходов и трат`;
 
-            const adviceList = document.getElementById('ai-deep-advices');
-            adviceList.innerHTML = "";
+            const pointsBox = document.getElementById('ai-big-points');
+            pointsBox.innerHTML = '';
 
-            const advices = [];
-
-            if (income <= 0) {
-                advices.push("📌 Доход не указан. Без него анализ неполный: я вижу деньги на счетах и траты, но не понимаю, насколько бюджет устойчив.");
+            if (mood === 'empty') {
+                setAnalyticsConclusion('Пока данных мало. Добавь деньги на счетах, доход и траты — тогда анализ станет полезным.');
+                addAnalyticsPoint(
+                    '📌 Сначала нужна база',
+                    'Сейчас приложение не видит полной картины: сколько денег есть, сколько приходит и сколько уходит.',
+                    'Заполни хотя бы три поля: общий остаток, доход и траты за месяц.'
+                );
+            } else if (mood === 'danger') {
+                setAnalyticsConclusion('Главная задача сейчас — остановить утечку денег и не дать запасу таять дальше.');
+            } else if (mood === 'warning') {
+                setAnalyticsConclusion('Бюджет держится, но запас прочности слабый. Нужно сделать его спокойнее и безопаснее.');
+            } else if (mood === 'strong') {
+                setAnalyticsConclusion('Финансовая картина сильная: есть запас, деньги растут, нагрузка под контролем.');
+            } else if (mood === 'good') {
+                setAnalyticsConclusion('Ситуация хорошая: деньги не просто лежат, а постепенно растут. Главное — не сбить темп.');
+            } else {
+                setAnalyticsConclusion('Ситуация рабочая. Большой опасности нет, но есть места, где бюджет можно усилить.');
             }
 
-            if (expenses <= 0) {
-                advices.push("📌 Траты не указаны. Добавь план расходов, чтобы понять реальную финансовую нагрузку.");
-            }
-
-            if (net > 0) {
-                advices.push(`✅ Капитал растет на <b>${money(net)}</b> в месяц. Это хорошая динамика.`);
-
-                if (saveRate >= 30) {
-                    advices.push("🚀 Ты откладываешь очень сильную долю дохода. Такой темп быстро усиливает финансовую безопасность.");
-                } else if (saveRate >= 20) {
-                    advices.push("💎 Накопления в хорошей зоне. 20%+ от дохода — уже уверенный режим.");
-                } else if (saveRate >= 10) {
-                    advices.push("🟡 Плюс есть, но небольшой. Попробуй поднять накопления хотя бы до 20% от дохода.");
-                } else {
-                    advices.push("⚠️ Плюс слишком тонкий. Любая неожиданная трата может съесть весь месячный результат.");
+            if (income > 0 || expenses > 0) {
+                if (net > 0) {
+                    addAnalyticsPoint(
+                        '📈 Деньги растут',
+                        `После всех трат остается примерно <b>${money(net)}</b> в месяц. Это твой настоящий финансовый плюс, а не просто доход на бумаге.`,
+                        saveRate >= 20
+                            ? 'Сохраняй этот темп. Лучше сразу отделять этот плюс в резерв или отдельный счет.'
+                            : 'Попробуй увеличить остаток хотя бы до 20% от дохода. Даже небольшое сокращение трат сильно поможет.'
+                    );
+                } else if (net === 0 && income > 0) {
+                    addAnalyticsPoint(
+                        '⚖️ Все уходит в ноль',
+                        'Доход полностью закрывает траты, но после месяца ничего не остается. Это не провал, но роста капитала нет.',
+                        'Найди одну категорию трат, которую можно уменьшить. Цель — сделать хотя бы маленький плюс.'
+                    );
+                } else if (net < 0) {
+                    addAnalyticsPoint(
+                        '🚨 Есть минус',
+                        `Расходы больше дохода на <b>${money(Math.abs(net))}</b>. Это значит, что часть жизни сейчас оплачивается из накоплений.`,
+                        'Сначала закрой именно эту дыру: либо сократи траты на эту сумму, либо найди дополнительный доход.'
+                    );
                 }
-            }
-
-            if (net === 0 && income > 0) {
-                advices.push("🟡 Сейчас бюджет выходит ровно в ноль. Это стабильнее минуса, но финансовый запас не растет.");
-            }
-
-            if (net < 0) {
-                advices.push(`🚨 Дефицит бюджета: <b>${money(Math.abs(net))}</b>. Ты тратишь запасы, а не наращиваешь капитал.`);
-                advices.push("🔧 Первая цель — найти, где сократить траты или увеличить доход хотя бы на сумму дефицита.");
             }
 
             if (income > 0 && expenses > 0) {
                 if (loadPercent > 100) {
-                    advices.push(`🔴 Траты выше дохода: нагрузка <b>${loadPercent}%</b>. Это главный риск.`);
+                    addAnalyticsPoint(
+                        '🔴 Траты выше дохода',
+                        `Нагрузка <b>${loadPercent}%</b>. Это опасный режим: бюджет не выдерживает месяц без проедания запасов.`,
+                        'Временно поставь лимит на необязательные покупки, пока траты не станут ниже дохода.'
+                    );
                 } else if (loadPercent > 80) {
-                    advices.push(`🟠 Нагрузка высокая: <b>${loadPercent}%</b> дохода уходит на расходы. Запас маленький.`);
+                    addAnalyticsPoint(
+                        '🟠 Очень плотный месяц',
+                        `На траты уходит <b>${loadPercent}%</b> дохода. Формально плюс может быть, но воздуха почти нет.`,
+                        'Проверь регулярные списания, доставки, мелкие покупки и подписки. Там часто прячется лишнее.'
+                    );
                 } else if (loadPercent > 50) {
-                    advices.push(`🟡 Нагрузка средняя: <b>${loadPercent}%</b>. Ситуация рабочая, но есть смысл следить за мелкими расходами.`);
+                    addAnalyticsPoint(
+                        '🟡 Нормально, но можно лучше',
+                        `Траты занимают <b>${loadPercent}%</b> дохода. Это не страшно, но бюджету полезно больше свободного места.`,
+                        'Оставь комфорт, но выбери 1–2 категории, где можно тратить чуть осознаннее.'
+                    );
                 } else {
-                    advices.push(`🟢 Нагрузка комфортная: <b>${loadPercent}%</b>. После трат остается хороший воздух.`);
+                    addAnalyticsPoint(
+                        '🟢 Траты под контролем',
+                        `На расходы уходит около <b>${loadPercent}%</b> дохода. Это спокойная нагрузка: после месяца остается хороший запас.`,
+                        'Не расслабляй контроль. Свободные деньги лучше заранее направлять в цель, а не оставлять “как получится”.'
+                    );
                 }
             }
 
             if (expenses > 0) {
                 if (survival < 1) {
-                    advices.push(`🔴 Подушка очень маленькая: меньше месяца автономности. Сначала собери резерв хотя бы на 1 месяц трат.`);
+                    addAnalyticsPoint(
+                        '🛟 Подушка почти пустая',
+                        'Если доход внезапно пропадет, текущих денег не хватит даже на один обычный месяц жизни.',
+                        'Первая цель — накопить хотя бы 1 месяц расходов. Это важнее красивых финансовых планов.'
+                    );
                 } else if (survival < 3) {
-                    advices.push(`🟠 Резерв есть, но слабый: <b>${survival.toFixed(1)} мес.</b> Цель — минимум 3 месяца.`);
+                    addAnalyticsPoint(
+                        '🛟 Подушка есть, но слабая',
+                        `Запаса хватит примерно на <b>${survival.toFixed(1)} ${monthWord(survival)}</b>. Это уже лучше нуля, но спокойствия мало.`,
+                        'Доведи подушку до 3 месяцев расходов. После этого станет намного легче принимать решения.'
+                    );
                 } else if (survival < 6) {
-                    advices.push(`🟡 Подушка нормальная: <b>${survival.toFixed(1)} мес.</b> Следующий уровень — 6 месяцев спокойствия.`);
+                    addAnalyticsPoint(
+                        '💼 Подушка уже рабочая',
+                        `Запаса хватит примерно на <b>${survival.toFixed(1)} ${monthWord(survival)}</b>. Это нормальный уровень защиты.`,
+                        'Следующая цель — 6 месяцев. Это даст больше свободы и меньше тревоги.'
+                    );
                 } else {
-                    advices.push(`💎 Подушка сильная: <b>${survival.toFixed(1)} мес.</b> Можно думать не только о защите, но и о росте капитала.`);
+                    addAnalyticsPoint(
+                        '💎 Сильный запас прочности',
+                        `Твоих денег хватит примерно на <b>${survival.toFixed(1)} ${monthWord(survival)}</b>. Это уже серьезная финансовая база.`,
+                        'Можно разделить деньги: часть оставить как подушку, а часть направить на крупную цель или рост капитала.'
+                    );
                 }
             }
 
-            if (totalFuture < 0) {
-                advices.push("⛔ По прогнозу через месяц баланс может уйти в минус. Это нужно исправить первым делом.");
-            } else if (totalFuture > totalNow && net > 0) {
-                advices.push(`📈 Прогноз хороший: через месяц будет примерно <b>${money(totalFuture)}</b>.`);
+            if (totalFuture > totalNow && net > 0) {
+                addAnalyticsPoint(
+                    '🔮 Прогноз на месяц',
+                    `Если план не сорвется, к концу месяца будет примерно <b>${money(totalFuture)}</b>. Это больше, чем сейчас.`,
+                    'Зафиксируй этот план и не трогай накопленный плюс без причины.'
+                );
+            } else if (totalFuture < totalNow && net < 0) {
+                addAnalyticsPoint(
+                    '🔮 Прогноз на месяц',
+                    `По текущему плану к концу месяца останется примерно <b>${money(totalFuture)}</b>. Это меньше, чем сейчас.`,
+                    'Сделай этот прогноз лучше: уменьши траты или добавь доход до выхода хотя бы в ноль.'
+                );
             }
 
-            if (advices.length === 0) {
-                advices.push("🤖 Пока мало данных для глубокого вывода. Заполни счета, доход и траты — тогда отчет станет точнее.");
+            if (pointsBox.children.length === 0) {
+                addAnalyticsPoint(
+                    '🤖 Нужны данные',
+                    'Я не вижу достаточно цифр, чтобы сделать честный вывод.',
+                    'Заполни счета, доход и расходы — тогда отчет станет точнее.'
+                );
             }
-
-            advices.forEach(text => {
-                const li = document.createElement('li');
-                li.innerHTML = text;
-                adviceList.appendChild(li);
-            });
 
             document.getElementById('ai-modal').style.display = 'block';
 
-            if (tg && tg.HapticFeedback) {
+            if (tg && tg.HapticFeedback && typeof tg.HapticFeedback.impactOccurred === 'function') {
                 tg.HapticFeedback.impactOccurred('heavy');
             }
         }
