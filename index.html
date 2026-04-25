@@ -4,105 +4,194 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
             margin: 0; padding: 15px; 
-            /* МЕНЯЕМ ЗДЕСЬ: сделали градиент светлее (0.7 вместо 0.9) */
             background: linear-gradient(rgba(26, 26, 27, 0.75), rgba(26, 26, 27, 0.85)), 
                         url('https://i.ibb.co/bRDFHNp4/Banknote-5000-rubles-1997-front.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-            color: #ffffff; 
-            min-height: 100vh;
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: #ffffff; min-height: 100vh;
         }
-        
-        /* НЕМНОГО ПОДПРАВИМ КАРТОЧКУ, ЧТОБЫ ОНА БЫЛА КОНТРАСТНЕЕ */
         .card { 
-            background: rgba(28, 28, 30, 0.7); /* Сделали чуть прозрачнее саму карточку */
-            padding: 20px; border-radius: 28px; 
-            border: 1px solid rgba(255, 255, 255, 0.15); 
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
+            background: rgba(28, 28, 30, 0.75); padding: 20px; border-radius: 28px; 
+            border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px); box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
         }
-        .greeting { font-size: 1.2em; font-weight: bold; color: #a29bfe; }
-        .section { color: #55efc4; font-size: 0.75em; font-weight: bold; margin: 15px 0 10px; text-transform: uppercase; }
-        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        input { 
-            width: 100px; background: rgba(255, 255, 255, 0.05); border: 1px solid #444; 
-            color: white; border-radius: 10px; padding: 10px; text-align: right; font-size: 1em; outline: none;
-        }
-        .ai-box { background: rgba(162, 155, 254, 0.1); border-left: 4px solid #a29bfe; padding: 12px; border-radius: 8px; margin: 20px 0; font-size: 0.85em; }
-        button { width: 100%; background: #a29bfe; color: #1a1a1b; border: none; padding: 18px; border-radius: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .greeting { font-size: 1.1em; font-weight: bold; color: #a29bfe; }
+        .settings-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 6px 12px; border-radius: 10px; font-size: 0.75em; }
         
-        /* Стиль для версии */
-        .version-tag { font-size: 0.6em; color: #555; text-align: center; margin-top: 15px; letter-spacing: 1px; }
+        .section { color: #55efc4; font-size: 0.75em; font-weight: bold; margin: 20px 0 12px; text-transform: uppercase; letter-spacing: 1.2px; }
+        
+        .asset-item { margin-bottom: 12px; }
+        .row { display: flex; justify-content: space-between; align-items: center; }
+        input { 
+            width: 95px; background: #2d2d2e; border: 1px solid #444; 
+            color: white; border-radius: 8px; padding: 6px 10px; text-align: right; outline: none; font-size: 0.9em;
+        }
+        .ai-small { font-size: 0.65em; color: #888; margin-top: 4px; padding-left: 5px; }
+
+        .main-ai-box { 
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); 
+            padding: 15px; border-radius: 16px; margin: 20px 0; 
+        }
+        .main-ai-title { font-size: 0.7em; color: #a29bfe; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
+        .main-ai-text { font-size: 0.85em; color: #efefef; line-height: 1.4; }
+
+        .res-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95em; }
+        .del-btn { display: none; color: #ff7675; margin-left: 10px; font-weight: bold; font-size: 1.2em; }
+        .add-btn { display: none; width: 100%; background: none; border: 1px dashed #55efc4; color: #55efc4; padding: 10px; border-radius: 12px; margin-top: 10px; font-size: 0.8em; cursor: pointer; }
+
+        button.save-btn { 
+            width: 100%; background: #a29bfe; color: #1a1a1b; border: none; 
+            padding: 18px; border-radius: 16px; font-weight: bold; margin-top: 15px; font-size: 0.95em;
+        }
+        .version-tag { font-size: 0.6em; color: #555; text-align: center; margin-top: 15px; }
     </style>
 </head>
-<body onclick="document.activeElement.blur()"> <div class="card" onclick="event.stopPropagation()">
-        <div id="user-greeting" class="greeting">Привет!</div>
-        <div id="ai-status" style="font-size: 0.8em; color: #bbb; margin-bottom: 15px;">Загрузка...</div>
-        
-        <div class="section">🏙️ АКТИВЫ</div>
-        <div class="row"><span>💵 Наличные</span><input type="number" id="cash" value="5000"></div>
-        <div class="row"><span>💳 Сбербанк</span><input type="number" id="sber" value="15000"></div>
-        <div class="row"><span>🟡 Тинькофф</span><input type="number" id="tink" value="10000"></div>
-        <div class="row"><span>🔵 ВТБ</span><input type="number" id="vtb" value="0"></div>
+<body onclick="document.activeElement.blur()">
+    <div class="card" onclick="event.stopPropagation()">
+        <div class="header">
+            <div id="user-greeting" class="greeting">Загрузка...</div>
+            <button class="settings-btn" onclick="toggleSettings()">⚙️ Настройки</button>
+        </div>
 
-        <div class="section">📊 ПЛАН</div>
-        <div class="row"><span>📈 Доход</span><input type="number" id="inc" value="60000"></div>
-        <div class="row"><span>📉 Траты</span><input type="number" id="exp" value="30000"></div>
+        <div class="section">💰 КОШЕЛЕК (В наличии)</div>
+        <div id="assets-list">
+            <div class="asset-item" id="item-sber">
+                <div class="row">
+                    <span style="color:#b2bec3; font-size:0.85em;">💳 Сбербанк</span>
+                    <div style="display:flex; align-items:center;">
+                        <input type="number" value="15000" oninput="update()">
+                        <span class="del-btn" onclick="removeItem('item-sber')">×</span>
+                    </div>
+                </div>
+                <div class="ai-small">...</div>
+            </div>
+            </div>
+        <button id="add-btn" class="add-btn" onclick="addNewAsset()">+ Добавить счет</button>
 
-        <div class="ai-box"><span id="advice">...</span></div>
+        <div class="section" style="color:#74b9ff;">📊 ПЛАН НА МЕСЯЦ</div>
+        <div class="asset-item">
+            <div class="row">
+                <span style="color:#487eb0; font-size:0.85em;">📈 МОЙ ДОХОД</span>
+                <input type="number" id="inc" value="60000" oninput="update()">
+            </div>
+            <div id="ai-inc" class="ai-small">...</div>
+        </div>
+        <div class="asset-item">
+            <div class="row">
+                <span style="color:#e84118; font-size:0.85em;">📉 ТРАТЫ (План)</span>
+                <input type="number" id="exp" value="30000" oninput="update()">
+            </div>
+            <div id="ai-exp" class="ai-small">...</div>
+        </div>
 
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Итог:</span><b id="total" style="color:#55efc4">0 ₽</b></div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><span>Прогноз:</span><b id="proj" style="color:#74b9ff">0 ₽</b></div>
+        <div class="main-ai-box">
+            <div class="main-ai-title">🤖 ГЛАВНЫЙ ВЫВОД ИИ:</div>
+            <div id="ai-main-advice" class="main-ai-text">Анализирую ситуацию...</div>
+        </div>
 
-        <button onclick="save()">💾 ЗАФИКСИРОВАТЬ</button>
-        
-        <div class="version-tag">ВЕРСИЯ ДЛЯ ЛЮБИМОЙ НАСТЮШИ VER: 1.0</div>
+        <div class="res-row">
+            <span style="color:#bbb;">Все деньги сейчас:</span>
+            <b id="r1" style="color:#55efc4">0 ₽</b>
+        </div>
+        <div class="res-row">
+            <span style="color:#bbb;">Будет через месяц:</span>
+            <b id="r2" style="color:#74b9ff">0 ₽</b>
+        </div>
+
+        <button class="save-btn" onclick="save()">💾 ЗАФИКСИРОВАТЬ ДАННЫЕ</button>
+        <div class="version-tag">BUILD VER: 2.2.1-AI_PILOT</div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
+        let settingsMode = false;
+
+        function toggleSettings() {
+            settingsMode = !settingsMode;
+            document.querySelectorAll('.del-btn').forEach(b => b.style.display = settingsMode ? 'block' : 'none');
+            document.getElementById('add-btn').style.display = settingsMode ? 'block' : 'none';
+        }
+
+        function addNewAsset() {
+            const name = prompt("Название (например, Наличные):");
+            if (!name) return;
+            const id = 'item-' + Date.now();
+            const html = `
+                <div class="asset-item" id="${id}">
+                    <div class="row">
+                        <span style="color:#b2bec3; font-size:0.85em;">💰 ${name}</span>
+                        <div style="display:flex; align-items:center;">
+                            <input type="number" value="0" oninput="update()">
+                            <span class="del-btn" style="display:block" onclick="removeItem('${id}')">×</span>
+                        </div>
+                    </div>
+                    <div class="ai-small">...</div>
+                </div>`;
+            document.getElementById('assets-list').insertAdjacentHTML('beforeend', html);
+            update();
+        }
+
+        function removeItem(id) {
+            document.getElementById(id).remove();
+            update();
+        }
 
         function update() {
-            const v = (id) => parseFloat(document.getElementById(id).value) || 0;
-            const total = v('cash') + v('sber') + v('tink') + v('vtb');
-            const net = v('inc') - v('exp');
-            const proj = total + net;
+            const assetInputs = document.querySelectorAll('#assets-list input');
+            let totalNow = 0;
+            assetInputs.forEach(input => {
+                const val = parseFloat(input.value) || 0;
+                totalNow += val;
+                
+                // 1. ИИ ПОД КАЖДОЙ СТРОКОЙ (Индивидуально)
+                const hint = input.closest('.asset-item').querySelector('.ai-small');
+                if (val === 0) hint.innerText = "🤖 Счет пуст";
+                else if (val > 50000) hint.innerText = "🤖 Солидный резерв!";
+                else hint.innerText = "🤖 Хранится в безопасности";
+            });
 
-            document.getElementById('total').innerText = total.toLocaleString() + " ₽";
-            document.getElementById('proj').innerText = proj.toLocaleString() + " ₽";
+            const income = parseFloat(document.getElementById('inc').value) || 0;
+            const expenses = parseFloat(document.getElementById('exp').value) || 0;
+            const net = income - expenses;
+            const totalFuture = totalNow + net;
 
-            // Приветствие по времени
-            const hr = new Date().getHours();
-            let greet = (hr<6)?"Ночи":(hr<12)?"Утро":(hr<18)?"День":"Вечер";
+            document.getElementById('r1').innerText = totalNow.toLocaleString() + " ₽";
+            document.getElementById('r2').innerText = totalFuture.toLocaleString() + " ₽";
+
+            // ИИ для Дохода и Трат
+            document.getElementById('ai-inc').innerText = `🤖 Это ${Math.round(income/30).toLocaleString()} ₽ в день`;
+            document.getElementById('ai-exp').innerText = expenses > (income * 0.8) ? "🤖 Опасный уровень трат!" : "🤖 Траты в норме";
+
+            // 2. ГЛАВНЫЙ СОВЕТ ИИ
+            let mainAdvice = "";
+            if (net > 0) {
+                mainAdvice = `Твой капитал растет. За месяц ты станешь богаче на **${net.toLocaleString()} ₽**. `;
+                mainAdvice += (totalNow > expenses * 3) ? "У тебя отличная подушка безопасности!" : "Но постарайся накопить побольше.";
+            } else if (net < 0) {
+                mainAdvice = "🚨 Внимание: ты тратишь больше, чем зарабатываешь. Запасы сокращаются.";
+            } else {
+                mainAdvice = "Ты в балансе, но капитал не растет. Попробуй увеличить доход.";
+            }
+            document.getElementById('ai-main-advice').innerText = mainAdvice;
+
+            // Приветствие
             const name = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Друг";
-            document.getElementById('user-greeting').innerText = `Добрый ${greet}, ${name}!`;
-            document.getElementById('ai-status').innerText = total > 50000 ? "💰 Капитал в порядке" : "📉 Нужно поднажать";
-            
-            let adv = net > 0 ? `Растем на ${net} ₽!` : `Убыток ${Math.abs(net)} ₽!`;
-            document.getElementById('advice').innerHTML = `🤖 <b>ИИ:</b> ${adv}`;
+            document.getElementById('user-greeting').innerText = `Привет, ${name}!`;
         }
-
-        document.querySelectorAll('input').forEach(i => i.oninput = update);
-        update();
 
         function save() {
-            document.activeElement.blur(); // Скрыть клавиатуру при сохранении
+            document.activeElement.blur();
             tg.HapticFeedback.notificationOccurred('success');
-            tg.showPopup({ title: "ОК", message: "Данные зафиксированы!", buttons: [{type: "ok"}] });
+            tg.showPopup({ title: "✅ Сохранено", message: "Данные зафиксированы!", buttons: [{type: "ok"}] });
         }
+
+        update();
     </script>
 </body>
 </html>
