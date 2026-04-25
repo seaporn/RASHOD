@@ -19,13 +19,17 @@
             border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px); box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
         }
-        .greeting { font-size: 1.2em; font-weight: bold; color: #a29bfe; margin-bottom: 20px; text-align: center; }
+        .greeting { font-size: 1.3em; font-weight: 800; color: #a29bfe; margin-bottom: 20px; text-align: center; letter-spacing: -0.5px; }
         .section { color: #55efc4; font-size: 0.75em; font-weight: bold; margin: 20px 0 12px; text-transform: uppercase; letter-spacing: 1.2px; }
         .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         input { 
             width: 95px; background: #2d2d2e; border: 1px solid #444; 
-            color: white; border-radius: 8px; padding: 6px 10px; text-align: right; outline: none;
+            color: white; border-radius: 8px; padding: 6px 10px; text-align: right; outline: none; font-family: inherit;
         }
+
+        /* ГРАФИК ДИНАМИКИ */
+        .progress-container { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 15px 0; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: #55efc4; transition: 0.5s ease; box-shadow: 0 0 10px rgba(85, 239, 196, 0.5); }
         
         .stats-btn {
             width: 100%; background: linear-gradient(135deg, #a29bfe, #6c5ce7);
@@ -36,8 +40,6 @@
             transition: 0.3s;
         }
         .stats-btn:active { transform: scale(0.98); }
-
-        /* МОДАЛЬНОЕ ОКНО */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); z-index: 1000; backdrop-filter: blur(8px);
@@ -49,35 +51,35 @@
             animation: slideUp 0.3s ease-out;
         }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
         .stat-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-bottom: 15px; border-left: 4px solid #a29bfe; }
         .stat-label { font-size: 0.7em; color: #aaa; text-transform: uppercase; margin-bottom: 5px; }
         .stat-value { font-size: 1.1em; font-weight: bold; }
-
         .ai-advices { font-size: 0.9em; line-height: 1.6; color: #efefef; padding-left: 20px; }
         .ai-advices li { margin-bottom: 12px; }
-
-        .footer { display: flex; justify-content: flex-end; margin-top: 20px; }
-        .settings-toggle { background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 40px; height: 40px; color: white; font-size: 1.1em; }
+        .footer { display: flex; justify-content: flex-end; margin-top: 15px; }
+        .settings-toggle { background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 40px; height: 40px; color: white; font-size: 1.1em; display: flex; align-items: center; justify-content: center; }
+        .del-btn { display: none; color: #ff7675; margin-left: 10px; font-weight: bold; cursor: pointer; font-size: 1.2em; }
+        .add-btn { display: none; width: 100%; background: none; border: 1px dashed #55efc4; color: #55efc4; padding: 12px; border-radius: 16px; margin-bottom: 15px; font-weight: bold; font-family: inherit; }
         
-        .del-btn { display: none; color: #ff7675; margin-left: 10px; font-weight: bold; cursor: pointer; }
-        .add-btn { display: none; width: 100%; background: none; border: 1px dashed #55efc4; color: #55efc4; padding: 12px; border-radius: 16px; margin-bottom: 15px; font-weight: bold; }
-
-        /* ТЕГ ВЕРСИИ */
-        .version-tag { font-size: 0.65em; color: #444; text-align: center; margin-top: 15px; letter-spacing: 1px; }
+        /* ВЕРСИЯ */
+        .version-tag { font-size: 0.7em; color: rgba(255, 255, 255, 0.2); text-align: center; margin-top: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
     </style>
 </head>
 <body onclick="document.activeElement.blur()">
     <div class="card" onclick="event.stopPropagation()">
-        <div id="user-greeting" class="greeting">ФИНАНСОВЫЙ ПИЛОТ</div>
+        <div id="user-greeting" class="greeting">Загрузка...</div>
 
-        <div class="section">💰 ВАШИ СЧЕТА</div>
+        <div class="section">💰 ВАШИ СЧЕТА (₽)</div>
         <div id="assets-list"></div>
         <button id="add-btn" class="add-btn" onclick="addNewAsset()">+ Добавить счет</button>
 
-        <div class="section" style="color:#74b9ff;">📊 ПЛАН МЕСЯЦА</div>
+        <div class="section" style="color:#74b9ff;">📊 ПЛАН МЕСЯЦА (₽)</div>
         <div class="row"><span>📈 ДОХОД</span><input type="number" id="inc" oninput="update()"></div>
         <div class="row"><span>📉 ТРАТЫ</span><input type="number" id="exp" oninput="update()"></div>
+
+        <div class="progress-container">
+            <div id="progress-bar"></div>
+        </div>
 
         <button class="stats-btn" onclick="showAnalytics()">
             📊 СФОРМИРОВАТЬ АНАЛИТИКУ
@@ -87,13 +89,13 @@
             <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
         </div>
         
-        <div class="version-tag">BUILD VER: 2.4.0-AI_PILOT</div>
+        <div class="version-tag">ВЕРСИЯ ДЛЯ ЛЮБИМОЙ НАСТЮШИ VER: 2.1</div>
     </div>
 
     <div id="ai-modal" class="modal" onclick="closeModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <span style="font-weight: bold; color: #a29bfe; font-size: 0.9em;">🤖 ОТЧЕТ AI-PILOT 2.4</span>
+                <span style="font-weight: bold; color: #a29bfe; font-size: 0.9em;">🤖 ОТЧЕТ AI-PILOT</span>
                 <span onclick="closeModal()" style="font-size: 1.5em; color: #666; cursor: pointer;">×</span>
             </div>
             
@@ -111,7 +113,7 @@
             <ul id="ai-deep-advices" class="ai-advices"></ul>
 
             <button class="stats-btn" onclick="closeModal()" style="margin-top: 15px; background: #333; box-shadow: none;">ЗАКРЫТЬ</button>
-            <div style="font-size:0.5em; color:#444; text-align:center; margin-top:10px;">DATA ANALYTICS ENGINE V.2.4</div>
+            <div style="font-size:0.55em; color:#444; text-align:center; margin-top:15px; font-weight: bold;">SPECIAL FOR NASTYUSHA EDITION</div>
         </div>
     </div>
 
@@ -121,12 +123,12 @@
         let settingsMode = false;
 
         function loadData() {
-            const savedAssets = JSON.parse(localStorage.getItem('myAssets')) || [{ name: 'Сбербанк', val: 15000 }];
+            const savedAssets = JSON.parse(localStorage.getItem('myAssets')) || [{ name: 'Сбербанк', val: 0 }];
             const list = document.getElementById('assets-list');
             list.innerHTML = '';
             savedAssets.forEach(a => renderAsset(a.name, a.val));
-            document.getElementById('inc').value = localStorage.getItem('myInc') || 60000;
-            document.getElementById('exp').value = localStorage.getItem('myExp') || 30000;
+            document.getElementById('inc').value = localStorage.getItem('myInc') || 0;
+            document.getElementById('exp').value = localStorage.getItem('myExp') || 0;
             update(false);
         }
 
@@ -144,13 +146,13 @@
         }
 
         function addNewAsset() {
-            const name = prompt("Название:");
+            const name = prompt("Название счета:");
             if (name) { renderAsset(name, 0); update(); }
         }
 
         function toggleSettings() {
             settingsMode = !settingsMode;
-            document.querySelectorAll('.del-btn').forEach(b => b.style.display = settingsMode ? 'block' : 'none');
+            document.querySelectorAll('.del-btn').forEach(b => b.style.display = settingsMode ? 'flex' : 'none');
             document.getElementById('add-btn').style.display = settingsMode ? 'block' : 'none';
         }
 
@@ -166,8 +168,17 @@
             const inc = parseFloat(document.getElementById('inc').value) || 0;
             const exp = parseFloat(document.getElementById('exp').value) || 0;
 
-            const name = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Друг";
-            document.getElementById('user-greeting').innerText = `Бюджет ${name}`;
+            const bar = document.getElementById('progress-bar');
+            let percent = inc > 0 ? (exp / inc) * 100 : 0;
+            if (percent > 100) percent = 100;
+            bar.style.width = percent + "%";
+            
+            if (percent > 80) { bar.style.background = "#ff7675"; bar.style.boxShadow = "0 0 10px rgba(255, 118, 117, 0.5)"; }
+            else if (percent > 50) { bar.style.background = "#fdcb6e"; bar.style.boxShadow = "0 0 10px rgba(253, 203, 110, 0.5)"; }
+            else { bar.style.background = "#55efc4"; bar.style.boxShadow = "0 0 10px rgba(85, 239, 196, 0.5)"; }
+
+            const userName = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "";
+            document.getElementById('user-greeting').innerText = userName ? `${userName}, ваш бюджет` : "Мой бюджет";
 
             if (shouldSave) {
                 localStorage.setItem('myAssets', JSON.stringify(assets));
@@ -177,7 +188,7 @@
         }
 
         function showAnalytics() {
-            document.activeElement.blur(); // Прячем клавиатуру
+            document.activeElement.blur();
             const totalNow = Array.from(document.querySelectorAll('#assets-list input')).reduce((s, i) => s + (parseFloat(i.value) || 0), 0);
             const inc = parseFloat(document.getElementById('inc').value) || 0;
             const exp = parseFloat(document.getElementById('exp').value) || 0;
@@ -186,7 +197,7 @@
             const saveRate = inc > 0 ? Math.round((net / inc) * 100) : 0;
             const survival = exp > 0 ? (totalNow / exp).toFixed(1) : 0;
 
-            document.getElementById('save-rate').innerText = saveRate + "% от дохода";
+            document.getElementById('save-rate').innerText = (saveRate > 0 ? saveRate : 0) + "% от дохода";
             document.getElementById('safety-margin').innerText = survival + " мес. автономности";
 
             const adviceList = document.getElementById('ai-deep-advices');
@@ -194,15 +205,13 @@
             
             let advices = [];
             if (net > 0) {
-                advices.push(`✅ Капитал растет: <b>+${net.toLocaleString()} ₽</b> в месяц.`);
-                if (saveRate < 20) advices.push("⚠️ Твой процент накоплений низкий. Попробуй откладывать хотя бы 20%.");
-                else advices.push("🚀 Мощная дисциплина! Ты строишь капитал быстрее большинства.");
-            } else {
-                advices.push("🚨 <b>Внимание:</b> Ты тратишь больше, чем зарабатываешь. Это путь в долги.");
+                advices.push(`✅ Капитал растет: <b>+${net.toLocaleString()} ₽</b> ежемесячно.`);
+            } else if (net < 0) {
+                advices.push(`🚨 <b>Внимание:</b> Траты выше дохода на <b>${Math.abs(net).toLocaleString()} ₽</b>.`);
             }
 
-            if (survival < 3) advices.push("🔴 Опасная зона! Твоего запаса хватит всего на <b>" + survival + " мес.</b> Срочно начни копить.");
-            else if (survival >= 6) advices.push("💎 Ты в безопасности. Твоя подушка (>6 мес.) позволяет начать инвестировать.");
+            if (survival < 3) advices.push("🔴 Срочно увеличь подушку! Запаса хватит всего на <b>" + survival + " мес.</b>");
+            else if (survival >= 6) advices.push("💎 Отличная защита. Твой фонд (>6 мес.) — это база.");
 
             advices.forEach(txt => {
                 const li = document.createElement('li');
@@ -215,7 +224,6 @@
         }
 
         function closeModal() { document.getElementById('ai-modal').style.display = 'none'; }
-
         loadData();
     </script>
 </body>
