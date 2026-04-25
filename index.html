@@ -1,229 +1,770 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
-            margin: 0; padding: 15px; 
-            background: linear-gradient(rgba(26, 26, 27, 0.8), rgba(26, 26, 27, 0.9)), 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background: linear-gradient(rgba(26, 26, 27, 0.8), rgba(26, 26, 27, 0.9)),
                         url('https://i.ibb.co/bRDFHNp4/Banknote-5000-rubles-1997-front.jpg');
-            background-size: cover; background-position: center; background-attachment: fixed;
-            color: #ffffff; min-height: 100vh;
-        }
-        .card { 
-            background: rgba(28, 28, 30, 0.75); padding: 20px; border-radius: 28px; 
-            border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px); box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
-        }
-        .greeting { font-size: 1.3em; font-weight: 800; color: #a29bfe; margin-bottom: 20px; text-align: center; letter-spacing: -0.5px; }
-        .section { color: #55efc4; font-size: 0.75em; font-weight: bold; margin: 20px 0 12px; text-transform: uppercase; letter-spacing: 1.2px; }
-        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        input { 
-            width: 95px; background: #2d2d2e; border: 1px solid #444; 
-            color: white; border-radius: 8px; padding: 6px 10px; text-align: right; outline: none; font-family: inherit;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #ffffff;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
 
-        /* ГРАФИК ДИНАМИКИ */
-        .progress-container { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 15px 0; overflow: hidden; }
-        #progress-bar { width: 0%; height: 100%; background: #55efc4; transition: 0.5s ease; box-shadow: 0 0 10px rgba(85, 239, 196, 0.5); }
-        
+        .card {
+            background: rgba(28, 28, 30, 0.75);
+            padding: 20px;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            max-width: 430px;
+            margin: 0 auto;
+        }
+
+        .greeting {
+            font-size: 1.3em;
+            font-weight: 800;
+            color: #a29bfe;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: -0.5px;
+        }
+
+        .section {
+            color: #55efc4;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin: 20px 0 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            gap: 12px;
+        }
+
+        input {
+            width: 95px;
+            background: #2d2d2e;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 8px;
+            padding: 6px 10px;
+            text-align: right;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input:focus {
+            border-color: #a29bfe;
+            box-shadow: 0 0 0 2px rgba(162, 155, 254, 0.15);
+        }
+
+        .ai-small {
+            font-size: 0.65em;
+            color: #888;
+            margin-top: 0;
+            margin-bottom: 10px;
+            text-align: right;
+            line-height: 1.35;
+        }
+
+        .asset-hint {
+            padding-left: 22px;
+            text-align: left;
+            color: #777;
+        }
+
+        .ai-main-box {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 16px;
+            margin: 18px 0;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .ai-main-title {
+            font-size: 0.7em;
+            color: #a29bfe;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+
+        #ai-main-advice {
+            font-size: 0.86em;
+            color: #efefef;
+            line-height: 1.45;
+        }
+
+        .money-summary {
+            padding: 0 5px;
+            margin-top: 15px;
+        }
+
+        .money-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+
+        .money-line span {
+            font-size: 0.9em;
+            color: #bbb;
+        }
+
+        .money-line b {
+            font-size: 1.08em;
+            white-space: nowrap;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: #55efc4;
+            transition: 0.5s ease;
+            box-shadow: 0 0 10px rgba(85, 239, 196, 0.5);
+        }
+
         .stats-btn {
-            width: 100%; background: linear-gradient(135deg, #a29bfe, #6c5ce7);
-            color: white; border: none; padding: 18px; border-radius: 20px;
-            font-weight: bold; font-size: 1em; margin-top: 25px;
+            width: 100%;
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1em;
+            margin-top: 25px;
             box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
             transition: 0.3s;
+            font-family: inherit;
+            cursor: pointer;
         }
-        .stats-btn:active { transform: scale(0.98); }
+
+        .stats-btn:active {
+            transform: scale(0.98);
+        }
+
         .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 1000; backdrop-filter: blur(8px);
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
+
         .modal-content {
-            position: absolute; bottom: 0; width: 100%;
-            background: #1c1c1e; border-radius: 30px 30px 0 0;
-            padding: 25px; box-sizing: border-box; color: white;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            max-height: 88vh;
+            overflow-y: auto;
+            background: #1c1c1e;
+            border-radius: 30px 30px 0 0;
+            padding: 25px;
+            box-sizing: border-box;
+            color: white;
             animation: slideUp 0.3s ease-out;
         }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .stat-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-bottom: 15px; border-left: 4px solid #a29bfe; }
-        .stat-label { font-size: 0.7em; color: #aaa; text-transform: uppercase; margin-bottom: 5px; }
-        .stat-value { font-size: 1.1em; font-weight: bold; }
-        .ai-advices { font-size: 0.9em; line-height: 1.6; color: #efefef; padding-left: 20px; }
-        .ai-advices li { margin-bottom: 12px; }
-        .footer { display: flex; justify-content: flex-end; margin-top: 15px; }
-        .settings-toggle { background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 40px; height: 40px; color: white; font-size: 1.1em; display: flex; align-items: center; justify-content: center; }
-        .del-btn { display: none; color: #ff7675; margin-left: 10px; font-weight: bold; cursor: pointer; font-size: 1.2em; }
-        .add-btn { display: none; width: 100%; background: none; border: 1px dashed #55efc4; color: #55efc4; padding: 12px; border-radius: 16px; margin-bottom: 15px; font-weight: bold; font-family: inherit; }
-        
-        /* ВЕРСИЯ */
-        .version-tag { font-size: 0.7em; color: rgba(255, 255, 255, 0.2); text-align: center; margin-top: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #a29bfe;
+        }
+
+        .stat-label {
+            font-size: 0.7em;
+            color: #aaa;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            line-height: 1.35;
+        }
+
+        .ai-advices {
+            font-size: 0.9em;
+            line-height: 1.6;
+            color: #efefef;
+            padding-left: 20px;
+        }
+
+        .ai-advices li {
+            margin-bottom: 12px;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+
+        .settings-toggle {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .del-btn {
+            display: none;
+            color: #ff7675;
+            margin-left: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.2em;
+            line-height: 1;
+        }
+
+        .add-btn {
+            display: none;
+            width: 100%;
+            background: none;
+            border: 1px dashed #55efc4;
+            color: #55efc4;
+            padding: 12px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .version-tag {
+            font-size: 0.7em;
+            color: rgba(255, 255, 255, 0.2);
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
-<body onclick="document.activeElement.blur()">
+
+<body onclick="blurActive()">
     <div class="card" onclick="event.stopPropagation()">
         <div id="user-greeting" class="greeting">Загрузка...</div>
 
-        <div class="section">💰 ВАШИ СЧЕТА (₽)</div>
+        <div class="section">💰 ВАШИ АКТИВЫ И СЧЕТА (₽)</div>
         <div id="assets-list"></div>
-        <button id="add-btn" class="add-btn" onclick="addNewAsset()">+ Добавить счет</button>
 
-        <div class="section" style="color:#74b9ff;">📊 ПЛАН МЕСЯЦА (₽)</div>
-        <div class="row"><span>📈 ДОХОД</span><input type="number" id="inc" oninput="update()"></div>
-        <div class="row"><span>📉 ТРАТЫ</span><input type="number" id="exp" oninput="update()"></div>
+        <button id="add-btn" class="add-btn" onclick="addNewAsset()">+ Добавить новый счет</button>
+
+        <div class="section" style="color:#74b9ff;">📊 ПЛАН ДОХОДОВ И ТРАТ (₽)</div>
+
+        <div class="row">
+            <span>📈 ПЛАН. ДОХОД</span>
+            <input type="number" id="inc" oninput="update()">
+        </div>
+        <div id="inc-hint" class="ai-small">🤖 Укажи доход, и я посчитаю запас на месяц.</div>
+
+        <div class="row">
+            <span>📉 ТЕКУЩИЕ ТРАТЫ</span>
+            <input type="number" id="exp" oninput="update()">
+        </div>
+        <div id="exp-hint" class="ai-small">🤖 Укажи траты, и я покажу нагрузку.</div>
 
         <div class="progress-container">
             <div id="progress-bar"></div>
         </div>
 
+        <div class="ai-main-box">
+            <div class="ai-main-title">🤖 ГЛАВНЫЙ ВЫВОД ИИ:</div>
+            <div id="ai-main-advice">Анализирую общую ситуацию...</div>
+        </div>
+
+        <div class="money-summary">
+            <div class="money-line">
+                <span>Все деньги сейчас:</span>
+                <b id="total-now" style="color:#55efc4;">0 ₽</b>
+            </div>
+
+            <div class="money-line">
+                <span>Будет через месяц:</span>
+                <b id="total-future" style="color:#74b9ff;">0 ₽</b>
+            </div>
+        </div>
+
         <button class="stats-btn" onclick="showAnalytics()">
-            📊 СФОРМИРОВАТЬ АНАЛИТИКУ
+            📊 СФОРМИРОВАТЬ ОТЧЕТ АНАЛИТИКИ
         </button>
 
         <div class="footer">
             <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
         </div>
-        
+
         <div class="version-tag">ВЕРСИЯ ДЛЯ ЛЮБИМОЙ НАСТЮШИ VER: 2.1</div>
     </div>
 
     <div id="ai-modal" class="modal" onclick="closeModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <span style="font-weight: bold; color: #a29bfe; font-size: 0.9em;">🤖 ОТЧЕТ AI-PILOT</span>
+                <span style="font-weight: bold; color: #a29bfe; font-size: 0.9em;">🤖 ГЛУБОКИЙ ОТЧЕТ AI-PILOT</span>
                 <span onclick="closeModal()" style="font-size: 1.5em; color: #666; cursor: pointer;">×</span>
             </div>
-            
+
             <div class="stat-card">
-                <div class="stat-label">Процент накоплений</div>
-                <div id="save-rate" class="stat-value">0%</div>
+                <div class="stat-label">Эффективность накоплений</div>
+                <div id="save-rate" class="stat-value">0% от дохода</div>
             </div>
 
             <div class="stat-card" style="border-left-color: #55efc4;">
-                <div class="stat-label">Запас прочности</div>
-                <div id="safety-margin" class="stat-value">0 месяцев</div>
+                <div class="stat-label">Запас финансовой прочности</div>
+                <div id="safety-margin" class="stat-value">0 месяцев автономности</div>
             </div>
 
-            <div class="section" style="margin-top:20px;">💡 СОВЕТЫ ИИ</div>
+            <div class="stat-card" style="border-left-color: #74b9ff;">
+                <div class="stat-label">Прогноз на конец месяца</div>
+                <div id="future-result" class="stat-value">0 ₽</div>
+            </div>
+
+            <div class="section" style="margin-top:20px;">💡 ПЕРСОНАЛЬНЫЕ СОВЕТЫ ИИ</div>
             <ul id="ai-deep-advices" class="ai-advices"></ul>
 
-            <button class="stats-btn" onclick="closeModal()" style="margin-top: 15px; background: #333; box-shadow: none;">ЗАКРЫТЬ</button>
-            <div style="font-size:0.55em; color:#444; text-align:center; margin-top:15px; font-weight: bold;">SPECIAL FOR NASTYUSHA EDITION</div>
+            <button class="stats-btn" onclick="closeModal()" style="margin-top: 15px; background: #333; box-shadow: none;">
+                ЗАКРЫТЬ ОТЧЕТ
+            </button>
+
+            <div style="font-size:0.55em; color:#444; text-align:center; margin-top:15px; font-weight: bold;">
+                SPECIAL FOR NASTYUSHA EDITION
+            </div>
         </div>
     </div>
 
     <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+
+        if (tg) {
+            tg.ready && tg.ready();
+            tg.expand && tg.expand();
+        }
+
         let settingsMode = false;
 
+        const DEFAULT_ASSETS = [
+            { name: 'Сбербанк', val: 0 },
+            { name: 'Тинькофф', val: 0 },
+            { name: 'ВТБ', val: 0 }
+        ];
+
+        function blurActive() {
+            const active = document.activeElement;
+            if (active && typeof active.blur === 'function') active.blur();
+        }
+
+        function money(num) {
+            return `${Math.round(num || 0).toLocaleString('ru-RU')} ₽`;
+        }
+
+        function monthWord(num) {
+            const n = Math.abs(Math.floor(num));
+            if (n % 10 === 1 && n % 100 !== 11) return 'месяц';
+            if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'месяца';
+            return 'месяцев';
+        }
+
+        function getNumber(id) {
+            return parseFloat(document.getElementById(id).value) || 0;
+        }
+
         function loadData() {
-            const savedAssets = JSON.parse(localStorage.getItem('myAssets')) || [{ name: 'Сбербанк', val: 0 }];
+            let savedAssets;
+
+            try {
+                savedAssets = JSON.parse(localStorage.getItem('myAssets'));
+            } catch (e) {
+                savedAssets = null;
+            }
+
+            if (!Array.isArray(savedAssets) || savedAssets.length === 0) {
+                savedAssets = DEFAULT_ASSETS;
+            }
+
             const list = document.getElementById('assets-list');
             list.innerHTML = '';
+
             savedAssets.forEach(a => renderAsset(a.name, a.val));
+
             document.getElementById('inc').value = localStorage.getItem('myInc') || 0;
             document.getElementById('exp').value = localStorage.getItem('myExp') || 0;
+
             update(false);
         }
 
         function renderAsset(name, val) {
-            const html = `<div class="asset-item" data-name="${name}">
+            const item = document.createElement('div');
+            item.className = 'asset-item';
+            item.dataset.name = name;
+
+            item.innerHTML = `
                 <div class="row">
-                    <span style="color:#b2bec3; font-size:0.85em;">● ${name}</span>
+                    <span class="asset-name" style="color:#b2bec3; font-size:0.85em;"></span>
                     <div style="display:flex; align-items:center;">
-                        <input type="number" value="${val}" oninput="update()">
-                        <span class="del-btn" onclick="this.closest('.asset-item').remove(); update();">×</span>
+                        <input class="asset-input" type="number" oninput="update()">
+                        <span class="del-btn" onclick="deleteAsset(this)">×</span>
                     </div>
                 </div>
-            </div>`;
-            document.getElementById('assets-list').insertAdjacentHTML('beforeend', html);
+                <div class="ai-small asset-hint">🤖 Анализирую счет...</div>
+            `;
+
+            item.querySelector('.asset-name').textContent = `● ${name}`;
+            item.querySelector('.asset-input').value = val || 0;
+
+            document.getElementById('assets-list').appendChild(item);
+        }
+
+        function deleteAsset(btn) {
+            btn.closest('.asset-item').remove();
+            update();
         }
 
         function addNewAsset() {
-            const name = prompt("Название счета:");
-            if (name) { renderAsset(name, 0); update(); }
+            const name = prompt("Название аккаунта/карты:");
+
+            if (name && name.trim()) {
+                renderAsset(name.trim(), 0);
+                update();
+            }
         }
 
         function toggleSettings() {
             settingsMode = !settingsMode;
-            document.querySelectorAll('.del-btn').forEach(b => b.style.display = settingsMode ? 'flex' : 'none');
+
+            document.querySelectorAll('.del-btn').forEach(b => {
+                b.style.display = settingsMode ? 'flex' : 'none';
+            });
+
             document.getElementById('add-btn').style.display = settingsMode ? 'block' : 'none';
+        }
+
+        function getAssetHint(name, val, income, expenses, totalNow) {
+            const lower = name.toLowerCase();
+
+            if (val < 0) {
+                return "🤖 Тут минус. Лучше проверить долг, кредитку или ошибку в сумме.";
+            }
+
+            if (val === 0) {
+                if (lower.includes('тинь') || lower.includes('tink')) return "🤖 Карта пока не используется. Нормально, если она запасная.";
+                if (lower.includes('втб')) return "🤖 Счет пуст. Можно использовать как отдельный резерв.";
+                return "🤖 Пока пусто. Если счет активный, лучше держать там хотя бы небольшой запас.";
+            }
+
+            if (lower.includes('сбер')) {
+                if (val >= 10000) return "🤖 Хороший остаток на основном счету.";
+                return "🤖 На основном счету маловато. Лучше держать запас хотя бы на несколько дней.";
+            }
+
+            if (lower.includes('тинь') || lower.includes('tink')) {
+                if (val > 0 && expenses > 0) return "🤖 Можно использовать для повседневных трат и контроля кэшбека.";
+                return "🤖 Деньги есть. Карта может быть удобной для мелких расходов.";
+            }
+
+            if (lower.includes('втб')) {
+                if (val > 0) return "🤖 Резерв на месте. Хорошо, когда часть денег лежит отдельно.";
+                return "🤖 Счет пуст. Можно сделать его резервным.";
+            }
+
+            if (expenses > 0) {
+                if (val >= expenses) return "🤖 Этот счет один покрывает примерно месяц трат.";
+                if (val >= expenses / 2) return "🤖 Нормальный запас, но не весь месяц.";
+                if (val < expenses / 4) return "🤖 Небольшой остаток. Его хватит ненадолго при текущих тратах.";
+            }
+
+            if (totalNow > 0 && val >= totalNow * 0.6) {
+                return "🤖 Основная часть денег лежит здесь. Это удобно, но лучше не держать всё в одном месте.";
+            }
+
+            return "🤖 Рабочий остаток. Счет выглядит нормально.";
+        }
+
+        function getMainAdvice(totalNow, income, expenses, net, totalFuture, loadPercent, survival) {
+            if (income <= 0 && expenses <= 0 && totalNow <= 0) {
+                return "Внеси суммы по счетам, доход и траты — после этого я покажу реальную картину бюджета.";
+            }
+
+            if (income <= 0 && expenses > 0) {
+                return `Доход пока не указан, но траты уже есть: <b>${money(expenses)}</b>. Без дохода бюджет будет уменьшаться, даже если сейчас есть запас.`;
+            }
+
+            if (net > 0) {
+                let text = `Твой капитал растет. За месяц ты станешь богаче примерно на <b>${money(net)}</b>. `;
+
+                if (loadPercent <= 50) {
+                    text += "Траты выглядят спокойно: остается хороший запас после дохода.";
+                } else if (loadPercent <= 80) {
+                    text += "Ситуация нормальная, но траты уже занимают заметную часть дохода.";
+                } else {
+                    text += "Плюс есть, но он хрупкий: большая часть дохода уходит на расходы.";
+                }
+
+                if (survival >= 6) {
+                    text += " Подушка уже сильная.";
+                } else if (survival > 0 && survival < 3) {
+                    text += " Главная цель сейчас — докачать подушку безопасности.";
+                }
+
+                return text;
+            }
+
+            if (net === 0 && income > 0) {
+                return `Ты выходишь ровно в ноль: доход <b>${money(income)}</b> полностью съедается тратами. Это не катастрофа, но капитал не растет.`;
+            }
+
+            return `🚨 Внимание: ты тратишь больше, чем зарабатываешь. При таком плане за месяц запас уменьшится на <b>${money(Math.abs(net))}</b>.`;
         }
 
         function update(shouldSave = true) {
             let totalNow = 0;
             const assets = [];
+
             document.querySelectorAll('#assets-list .asset-item').forEach(item => {
-                const val = parseFloat(item.querySelector('input').value) || 0;
+                const input = item.querySelector('.asset-input');
+                const val = parseFloat(input.value) || 0;
+                const name = item.dataset.name || 'Счет';
+
                 totalNow += val;
-                assets.push({ name: item.getAttribute('data-name'), val: val });
+                assets.push({ name, val });
             });
 
-            const inc = parseFloat(document.getElementById('inc').value) || 0;
-            const exp = parseFloat(document.getElementById('exp').value) || 0;
+            const income = getNumber('inc');
+            const expenses = getNumber('exp');
+            const net = income - expenses;
+            const totalFuture = totalNow + net;
+
+            const rawLoadPercent = income > 0 ? (expenses / income) * 100 : 0;
+            const loadPercent = Math.round(rawLoadPercent);
+            const survival = expenses > 0 ? totalNow / expenses : 0;
+
+            document.getElementById('total-now').innerText = money(totalNow);
+            document.getElementById('total-future').innerText = money(totalFuture);
+
+            document.getElementById('inc-hint').innerText =
+                income > 0
+                    ? `🤖 Это примерно ${money(income / 30)} в день. После трат останется ${money(net)}.`
+                    : "🤖 Укажи доход, и я посчитаю запас на месяц.";
+
+            document.getElementById('exp-hint').innerText =
+                expenses > 0 && income > 0
+                    ? `🤖 Нагрузка: ${loadPercent}%. ${expenses > income * 0.8 ? "Опасно близко к потолку." : "Пока контролируемо."}`
+                    : expenses > 0
+                        ? `🤖 План трат: ${money(expenses)}. Доход пока не указан.`
+                        : "🤖 Укажи траты, и я покажу нагрузку.";
+
+            document.querySelectorAll('#assets-list .asset-item').forEach(item => {
+                const name = item.dataset.name || 'Счет';
+                const val = parseFloat(item.querySelector('.asset-input').value) || 0;
+                item.querySelector('.asset-hint').innerText = getAssetHint(name, val, income, expenses, totalNow);
+            });
+
+            document.getElementById('ai-main-advice').innerHTML =
+                getMainAdvice(totalNow, income, expenses, net, totalFuture, loadPercent, survival);
 
             const bar = document.getElementById('progress-bar');
-            let percent = inc > 0 ? (exp / inc) * 100 : 0;
-            if (percent > 100) percent = 100;
-            bar.style.width = percent + "%";
-            
-            if (percent > 80) { bar.style.background = "#ff7675"; bar.style.boxShadow = "0 0 10px rgba(255, 118, 117, 0.5)"; }
-            else if (percent > 50) { bar.style.background = "#fdcb6e"; bar.style.boxShadow = "0 0 10px rgba(253, 203, 110, 0.5)"; }
-            else { bar.style.background = "#55efc4"; bar.style.boxShadow = "0 0 10px rgba(85, 239, 196, 0.5)"; }
+            const visualPercent = Math.min(Math.max(rawLoadPercent, 0), 100);
 
-            const userName = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "";
-            document.getElementById('user-greeting').innerText = userName ? `${userName}, ваш бюджет` : "Мой бюджет";
+            bar.style.width = visualPercent + "%";
+
+            if (rawLoadPercent > 80) {
+                bar.style.background = "#ff7675";
+                bar.style.boxShadow = "0 0 10px rgba(255, 118, 117, 0.5)";
+            } else if (rawLoadPercent > 50) {
+                bar.style.background = "#fdcb6e";
+                bar.style.boxShadow = "0 0 10px rgba(253, 203, 110, 0.5)";
+            } else {
+                bar.style.background = "#55efc4";
+                bar.style.boxShadow = "0 0 10px rgba(85, 239, 196, 0.5)";
+            }
+
+            const userName = tg && tg.initDataUnsafe && tg.initDataUnsafe.user
+                ? tg.initDataUnsafe.user.first_name
+                : "";
+
+            document.getElementById('user-greeting').innerText =
+                userName ? `${userName}, ваш бюджет` : "Мой бюджет";
 
             if (shouldSave) {
                 localStorage.setItem('myAssets', JSON.stringify(assets));
-                localStorage.setItem('myInc', inc);
-                localStorage.setItem('myExp', exp);
+                localStorage.setItem('myInc', income);
+                localStorage.setItem('myExp', expenses);
             }
         }
 
         function showAnalytics() {
-            document.activeElement.blur();
-            const totalNow = Array.from(document.querySelectorAll('#assets-list input')).reduce((s, i) => s + (parseFloat(i.value) || 0), 0);
-            const inc = parseFloat(document.getElementById('inc').value) || 0;
-            const exp = parseFloat(document.getElementById('exp').value) || 0;
-            const net = inc - exp;
-            
-            const saveRate = inc > 0 ? Math.round((net / inc) * 100) : 0;
-            const survival = exp > 0 ? (totalNow / exp).toFixed(1) : 0;
+            blurActive();
 
-            document.getElementById('save-rate').innerText = (saveRate > 0 ? saveRate : 0) + "% от дохода";
-            document.getElementById('safety-margin').innerText = survival + " мес. автономности";
+            const totalNow = Array.from(document.querySelectorAll('#assets-list .asset-input'))
+                .reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
+
+            const income = getNumber('inc');
+            const expenses = getNumber('exp');
+            const net = income - expenses;
+            const totalFuture = totalNow + net;
+
+            const saveRate = income > 0 ? Math.round((net / income) * 100) : 0;
+            const loadPercent = income > 0 ? Math.round((expenses / income) * 100) : 0;
+            const survival = expenses > 0 ? totalNow / expenses : 0;
+
+            document.getElementById('save-rate').innerText =
+                `${Math.max(saveRate, 0)}% от дохода`;
+
+            document.getElementById('safety-margin').innerText =
+                expenses > 0
+                    ? `${survival.toFixed(1)} ${monthWord(survival)} автономности`
+                    : "Нельзя посчитать без плана трат";
+
+            document.getElementById('future-result').innerText =
+                `${money(totalFuture)} после доходов и трат`;
 
             const adviceList = document.getElementById('ai-deep-advices');
             adviceList.innerHTML = "";
-            
-            let advices = [];
-            if (net > 0) {
-                advices.push(`✅ Капитал растет: <b>+${net.toLocaleString()} ₽</b> ежемесячно.`);
-            } else if (net < 0) {
-                advices.push(`🚨 <b>Внимание:</b> Траты выше дохода на <b>${Math.abs(net).toLocaleString()} ₽</b>.`);
+
+            const advices = [];
+
+            if (income <= 0) {
+                advices.push("📌 Доход не указан. Без него анализ неполный: я вижу деньги на счетах и траты, но не понимаю, насколько бюджет устойчив.");
             }
 
-            if (survival < 3) advices.push("🔴 Срочно увеличь подушку! Запаса хватит всего на <b>" + survival + " мес.</b>");
-            else if (survival >= 6) advices.push("💎 Отличная защита. Твой фонд (>6 мес.) — это база.");
+            if (expenses <= 0) {
+                advices.push("📌 Траты не указаны. Добавь план расходов, чтобы понять реальную финансовую нагрузку.");
+            }
 
-            advices.forEach(txt => {
+            if (net > 0) {
+                advices.push(`✅ Капитал растет на <b>${money(net)}</b> в месяц. Это хорошая динамика.`);
+
+                if (saveRate >= 30) {
+                    advices.push("🚀 Ты откладываешь очень сильную долю дохода. Такой темп быстро усиливает финансовую безопасность.");
+                } else if (saveRate >= 20) {
+                    advices.push("💎 Накопления в хорошей зоне. 20%+ от дохода — уже уверенный режим.");
+                } else if (saveRate >= 10) {
+                    advices.push("🟡 Плюс есть, но небольшой. Попробуй поднять накопления хотя бы до 20% от дохода.");
+                } else {
+                    advices.push("⚠️ Плюс слишком тонкий. Любая неожиданная трата может съесть весь месячный результат.");
+                }
+            }
+
+            if (net === 0 && income > 0) {
+                advices.push("🟡 Сейчас бюджет выходит ровно в ноль. Это стабильнее минуса, но финансовый запас не растет.");
+            }
+
+            if (net < 0) {
+                advices.push(`🚨 Дефицит бюджета: <b>${money(Math.abs(net))}</b>. Ты тратишь запасы, а не наращиваешь капитал.`);
+                advices.push("🔧 Первая цель — найти, где сократить траты или увеличить доход хотя бы на сумму дефицита.");
+            }
+
+            if (income > 0 && expenses > 0) {
+                if (loadPercent > 100) {
+                    advices.push(`🔴 Траты выше дохода: нагрузка <b>${loadPercent}%</b>. Это главный риск.`);
+                } else if (loadPercent > 80) {
+                    advices.push(`🟠 Нагрузка высокая: <b>${loadPercent}%</b> дохода уходит на расходы. Запас маленький.`);
+                } else if (loadPercent > 50) {
+                    advices.push(`🟡 Нагрузка средняя: <b>${loadPercent}%</b>. Ситуация рабочая, но есть смысл следить за мелкими расходами.`);
+                } else {
+                    advices.push(`🟢 Нагрузка комфортная: <b>${loadPercent}%</b>. После трат остается хороший воздух.`);
+                }
+            }
+
+            if (expenses > 0) {
+                if (survival < 1) {
+                    advices.push(`🔴 Подушка очень маленькая: меньше месяца автономности. Сначала собери резерв хотя бы на 1 месяц трат.`);
+                } else if (survival < 3) {
+                    advices.push(`🟠 Резерв есть, но слабый: <b>${survival.toFixed(1)} мес.</b> Цель — минимум 3 месяца.`);
+                } else if (survival < 6) {
+                    advices.push(`🟡 Подушка нормальная: <b>${survival.toFixed(1)} мес.</b> Следующий уровень — 6 месяцев спокойствия.`);
+                } else {
+                    advices.push(`💎 Подушка сильная: <b>${survival.toFixed(1)} мес.</b> Можно думать не только о защите, но и о росте капитала.`);
+                }
+            }
+
+            if (totalFuture < 0) {
+                advices.push("⛔ По прогнозу через месяц баланс может уйти в минус. Это нужно исправить первым делом.");
+            } else if (totalFuture > totalNow && net > 0) {
+                advices.push(`📈 Прогноз хороший: через месяц будет примерно <b>${money(totalFuture)}</b>.`);
+            }
+
+            if (advices.length === 0) {
+                advices.push("🤖 Пока мало данных для глубокого вывода. Заполни счета, доход и траты — тогда отчет станет точнее.");
+            }
+
+            advices.forEach(text => {
                 const li = document.createElement('li');
-                li.innerHTML = txt;
+                li.innerHTML = text;
                 adviceList.appendChild(li);
             });
 
             document.getElementById('ai-modal').style.display = 'block';
-            tg.HapticFeedback.impactOccurred('heavy');
+
+            if (tg && tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('heavy');
+            }
         }
 
-        function closeModal() { document.getElementById('ai-modal').style.display = 'none'; }
+        function closeModal() {
+            document.getElementById('ai-modal').style.display = 'none';
+        }
+
         loadData();
     </script>
 </body>
